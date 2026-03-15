@@ -51,7 +51,7 @@ export default function LoginPage() {
               <option value="patron">Patron (Wanderer & Supporter)</option>
               <option value="artisan">Artisan (Master Crafter & Seller)</option>
             </select>
-            <p className="text-xs text-leather-700 italic">Veterans simply 'Enter the Guild' below. This choice binds only to new heraldry.</p>
+            <p className="text-xs text-leather-700 italic">Veterans simply &apos;Enter the Guild&apos; below. This choice binds only to new heraldry.</p>
           </div>
 
           <div className="flex flex-col gap-3 mt-4">

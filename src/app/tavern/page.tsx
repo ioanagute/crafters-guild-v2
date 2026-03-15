@@ -3,6 +3,37 @@ import { createClient } from '@/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
 import TavernChat from '@/components/TavernChat';
 
+type PostRow = {
+  id: string;
+  content: string;
+  tier_required: string;
+  created_at: string;
+  profiles:
+    | {
+        username: string | null;
+        full_name: string | null;
+        role: string | null;
+        guilds: { name: string } | { name: string }[] | null;
+      }
+    | {
+        username: string | null;
+        full_name: string | null;
+        role: string | null;
+        guilds: { name: string } | { name: string }[] | null;
+      }[]
+    | null;
+};
+
+function getAuthorProfile(profile: PostRow['profiles']) {
+  if (!profile) return null;
+  return Array.isArray(profile) ? profile[0] || null : profile;
+}
+
+function getGuildName(guilds: { name: string } | { name: string }[] | null | undefined) {
+  if (!guilds) return undefined;
+  return Array.isArray(guilds) ? guilds[0]?.name : guilds.name;
+}
+
 function timeAgo(dateString: string) {
   const date = new Date(dateString);
   const now = new Date();
@@ -122,17 +153,21 @@ export default async function Tavern() {
                 The board is empty. Be the first to nail a dispatch.
               </div>
             ) : (
-              posts.map((post: any) => (
-                <Post 
-                  key={post.id}
-                  author={post.profiles?.username || post.profiles?.full_name || 'Unknown Wanderer'}
-                  role={post.profiles?.role || 'patron'}
-                  guildName={post.profiles?.guilds?.name}
-                  time={timeAgo(post.created_at)}
-                  content={post.content}
-                  tier={post.tier_required !== 'Public' ? `${post.tier_required} Tier Exclusive` : undefined}
-                />
-              ))
+              (posts as PostRow[]).map((post) => {
+                const author = getAuthorProfile(post.profiles);
+
+                return (
+                  <Post 
+                    key={post.id}
+                    author={author?.username || author?.full_name || 'Unknown Wanderer'}
+                    role={author?.role || 'patron'}
+                    guildName={getGuildName(author?.guilds)}
+                    time={timeAgo(post.created_at)}
+                    content={post.content}
+                    tier={post.tier_required !== 'Public' ? `${post.tier_required} Tier Exclusive` : undefined}
+                  />
+                );
+              })
             )}
           </div>
         </div>
