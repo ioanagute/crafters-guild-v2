@@ -10,13 +10,21 @@ type Message = {
   text: string;
 };
 
+type TavernChannel = {
+  send: (payload: {
+    type: 'broadcast';
+    event: 'chat_message';
+    payload: { user: string; text: string };
+  }) => Promise<unknown>;
+};
+
 export default function TavernChat({ currentUser }: { currentUser: { id: string; name: string } | null }) {
   const [messages, setMessages] = useState<Message[]>([
     { id: 'system-1', user: 'Innkeeper', text: 'Welcome to the Local Hearth! Pull up a chair and find a party. (Messages here are ephemeral and fade into the ether when you leave).' }
   ]);
   const [input, setInput] = useState('');
   const supabase = createClient();
-  const channelRef = useRef<any>(null);
+  const channelRef = useRef<TavernChannel | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

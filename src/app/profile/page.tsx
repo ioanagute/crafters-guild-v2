@@ -2,6 +2,15 @@ import { createClient } from '@/utils/supabase/server';
 import { redirect } from 'next/navigation';
 import { Shield, Save, LogOut } from 'lucide-react';
 import { revalidatePath } from 'next/cache';
+import Link from 'next/link';
+
+type ProfileFormUpdate = {
+  username: string;
+  full_name: string;
+  bio: string;
+  avatar_url: string;
+  guild_id?: string | null;
+};
 
 export default async function ProfilePage() {
   const supabase = await createClient();
@@ -42,7 +51,7 @@ export default async function ProfilePage() {
     const avatar_url = formData.get('avatar_url') as string;
     const guild_id = formData.get('guild_id') as string;
 
-    const updateData: any = {
+    const updateData: ProfileFormUpdate = {
       username,
       full_name,
       bio,
@@ -51,6 +60,8 @@ export default async function ProfilePage() {
 
     if (guild_id) {
       updateData.guild_id = guild_id;
+    } else {
+      updateData.guild_id = null;
     }
 
     const { error } = await supabase.from('profiles').update(updateData).eq('id', user.id);
@@ -144,6 +155,12 @@ export default async function ProfilePage() {
 
             <div className="flex flex-col gap-2 w-full md:w-1/2">
               <label className="font-serif text-ink-900 font-bold uppercase tracking-widest text-xs">Guild Affiliation</label>
+              <div className="rounded-sm border border-gold-600/60 bg-leather-800 px-4 py-3 text-sm text-parchment-200 shadow-[inset_0_0_20px_rgba(0,0,0,0.2)]">
+                <span className="block text-[11px] uppercase tracking-[0.25em] text-gold-400">Current Banner</span>
+                <span className="mt-1 block font-serif text-lg">
+                  {profile?.guilds?.name || 'Unaffiliated (Lone Wanderer)'}
+                </span>
+              </div>
               <select 
                 name="guild_id"
                 defaultValue={profile?.guild_id || ''}
@@ -154,7 +171,12 @@ export default async function ProfilePage() {
                   <option key={guild.id} value={guild.id}>{guild.name}</option>
                 ))}
               </select>
-              <p className="text-xs text-leather-700 italic">Join a guild to bear their colors in the Tavern.</p>
+              <div className="flex items-center justify-between gap-3 text-xs text-leather-700 italic">
+                <span>Join a guild to bear their colors in the Tavern.</span>
+                <Link href="/guilds" className="not-italic text-leather-900 underline decoration-gold-600 underline-offset-2 hover:text-gold-600">
+                  Browse all guilds
+                </Link>
+              </div>
             </div>
           </div>
 

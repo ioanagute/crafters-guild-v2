@@ -2,6 +2,40 @@ import Link from 'next/link';
 import { Package, Search, Filter, Plus } from 'lucide-react';
 import { createClient } from '@/utils/supabase/server';
 
+type ProductRow = {
+  id: string;
+  title: string;
+  description: string | null;
+  price: number | string;
+  currency: string;
+  category: string;
+  profiles:
+    | {
+        username: string | null;
+        full_name: string | null;
+      }
+    | {
+        username: string | null;
+        full_name: string | null;
+      }[]
+    | null;
+};
+
+function getCrafterProfile(profile: ProductRow['profiles']) {
+  if (!profile) return null;
+  return Array.isArray(profile) ? profile[0] || null : profile;
+}
+
+type DisplayItem = {
+  id: string;
+  title: string;
+  crafterName: string;
+  price: string;
+  currency: string;
+  category: string;
+  description: string;
+};
+
 const mockItems = [
   { id: '1', title: "Elven Silk Cloak", crafterName: "Lysanthir", price: "250", currency: "Gold", category: "Apparel", description: "Woven under the light of a pale moon." },
   { id: '2', title: "Ironheart Greatsword", crafterName: "Grom", price: "400", currency: "Gold", category: "Weaponry", description: "Forged in the deep mountain of Khaz." },
@@ -15,7 +49,7 @@ export default async function Marketplace() {
   const supabase = await createClient();
   
   // Fetch products and their crafter details from Supabase
-  const { data: realProducts, error } = await supabase
+  const { data: realProducts } = await supabase
     .from('products')
     .select(`
       id,
@@ -29,18 +63,22 @@ export default async function Marketplace() {
     .order('created_at', { ascending: false });
 
   // Map the real data to match our UI, or fall back to mock data if empty
-  let displayItems = mockItems;
+  let displayItems: DisplayItem[] = mockItems;
   
   if (realProducts && realProducts.length > 0) {
-    displayItems = realProducts.map((p: any) => ({
+    displayItems = (realProducts as ProductRow[]).map((p) => {
+      const crafter = getCrafterProfile(p.profiles);
+
+      return {
       id: p.id,
       title: p.title,
-      crafterName: p.profiles?.username || p.profiles?.full_name || 'Unknown Artisan',
-      price: p.price,
+      crafterName: crafter?.username || crafter?.full_name || 'Unknown Artisan',
+      price: String(p.price),
       currency: p.currency,
       category: p.category,
-      description: p.description
-    }));
+      description: p.description || 'No lore has been recorded for this item.'
+      };
+    });
   }
 
   // Check if current user is an artisan to show the "Add Product" button
@@ -104,7 +142,7 @@ export default async function Marketplace() {
             <p className="text-sm text-leather-800 italic mb-4">Crafted by <Link href="#" className="underline decoration-gold-600 text-leather-900 font-bold">{item.crafterName}</Link></p>
             
             <p className="text-ink-900 flex-1 mb-6 text-sm leading-relaxed border-t border-dashed border-leather-700/50 pt-4">
-              "{item.description}"
+              &ldquo;{item.description}&rdquo;
             </p>
 
             <div className="w-full mt-auto flex items-center justify-between border-t-2 border-leather-800 pt-4">

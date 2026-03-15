@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Sparkles, ArrowRight, ShieldCheck, Gem } from "lucide-react";
+import { Sparkles, ShieldCheck, Gem } from "lucide-react";
 
 export default function Home() {
   return (
