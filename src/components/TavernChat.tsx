@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { createClient } from '@/utils/supabase/client';
-import { MessageSquare, Users } from 'lucide-react';
+import { MessageSquare, Signal, Users } from 'lucide-react';
 
 type Message = {
   id: string;
@@ -23,6 +23,7 @@ export default function TavernChat({ currentUser }: { currentUser: { id: string;
     { id: 'system-1', user: 'Innkeeper', text: 'Welcome to the Local Hearth! Pull up a chair and find a party. (Messages here are ephemeral and fade into the ether when you leave).' }
   ]);
   const [input, setInput] = useState('');
+  const [connected, setConnected] = useState(false);
   const supabase = createClient();
   const channelRef = useRef<TavernChannel | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -41,11 +42,14 @@ export default function TavernChat({ currentUser }: { currentUser: { id: string;
           { id: crypto.randomUUID(), user: payload.payload.user, text: payload.payload.text }
         ]);
       })
-      .subscribe();
+      .subscribe((status) => {
+        setConnected(status === 'SUBSCRIBED');
+      });
     
     channelRef.current = channel;
 
     return () => {
+      setConnected(false);
       supabase.removeChannel(channel);
     };
   }, [supabase]);
@@ -74,9 +78,18 @@ export default function TavernChat({ currentUser }: { currentUser: { id: string;
 
   return (
     <div className="flex-1 max-w-sm flex flex-col bg-iron-800/80 border-2 border-iron-700 p-4 h-[600px] md:sticky md:top-24">
-      <h2 className="text-2xl font-serif text-gold-400 mb-4 border-b border-iron-600 pb-2 flex items-center gap-2">
-        <Users className="w-5 h-5" /> Local Hearth
-      </h2>
+      <div className="mb-4 border-b border-iron-600 pb-2">
+        <h2 className="flex items-center gap-2 font-serif text-2xl text-gold-400">
+          <Users className="w-5 h-5" /> Local Hearth
+        </h2>
+        <div className="mt-2 flex items-center justify-between text-xs uppercase tracking-[0.2em] text-parchment-400">
+          <span>Ephemeral chat</span>
+          <span className={`inline-flex items-center gap-2 ${connected ? 'text-gold-400' : 'text-iron-500'}`}>
+            <Signal className="h-3.5 w-3.5" />
+            {connected ? 'Connected' : 'Connecting'}
+          </span>
+        </div>
+      </div>
 
       <div className="flex-1 overflow-y-auto space-y-4 pr-2 mb-4 scrollbar-thin scrollbar-thumb-iron-600 scrollbar-track-transparent">
         {messages.map((m) => (

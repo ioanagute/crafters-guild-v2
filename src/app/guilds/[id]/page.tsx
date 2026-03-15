@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Crown, ScrollText, ShieldCheck, Users } from "lucide-react";
@@ -111,9 +112,11 @@ export default async function GuildDetailPage({
           <div className="flex items-start gap-6">
             <div className="flex h-28 w-28 shrink-0 items-center justify-center overflow-hidden border-4 border-leather-800 bg-iron-900/10">
               {guildDetail.emblem_url ? (
-                <img
+                <Image
                   src={guildDetail.emblem_url}
                   alt={`${guildDetail.name} emblem`}
+                  width={224}
+                  height={224}
                   className="h-full w-full object-cover"
                 />
               ) : (

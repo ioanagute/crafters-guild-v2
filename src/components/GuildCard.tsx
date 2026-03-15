@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { Crown, Users } from "lucide-react";
 
@@ -16,9 +17,11 @@ export default function GuildCard({ guild }: { guild: GuildListItem }) {
         <div className="flex min-w-0 items-center gap-4">
           <div className="flex h-20 w-20 items-center justify-center overflow-hidden border-2 border-leather-800 bg-iron-900/10">
             {guild.emblem_url ? (
-              <img
+              <Image
                 src={guild.emblem_url}
                 alt={`${guild.name} emblem`}
+                width={160}
+                height={160}
                 className="h-full w-full object-cover"
               />
             ) : (

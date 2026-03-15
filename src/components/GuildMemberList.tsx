@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Shield, UserRound } from "lucide-react";
 
 export type GuildMember = {
@@ -41,9 +42,11 @@ export default function GuildMemberList({
             <div className="mb-4 flex items-start gap-4 border-b border-dashed border-leather-800/50 pb-4">
               <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden border-2 border-gold-600 bg-iron-900/10">
                 {member.avatar_url ? (
-                  <img
+                  <Image
                     src={member.avatar_url}
                     alt={`${displayName} crest`}
+                    width={96}
+                    height={96}
                     className="h-full w-full object-cover"
                   />
                 ) : (

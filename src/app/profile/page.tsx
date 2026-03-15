@@ -1,8 +1,13 @@
 import { createClient } from '@/utils/supabase/server';
 import { redirect } from 'next/navigation';
-import { Shield, Save, LogOut } from 'lucide-react';
+import Image from 'next/image';
+import { Shield, Save, LogOut, ScrollText, Swords, Crown } from 'lucide-react';
 import { revalidatePath } from 'next/cache';
 import Link from 'next/link';
+import PageHeader from '@/components/PageHeader';
+import ParchmentCard from '@/components/ParchmentCard';
+import StatPill from '@/components/StatPill';
+import ThemedLinkButton from '@/components/ThemedLinkButton';
 
 type ProfileFormUpdate = {
   username: string;
@@ -37,6 +42,17 @@ export default async function ProfilePage() {
     .from('guilds')
     .select('*')
     .order('name');
+
+  const [{ count: productCount }, { count: postCount }] = await Promise.all([
+    supabase
+      .from('products')
+      .select('*', { count: 'exact', head: true })
+      .eq('crafter_id', user.id),
+    supabase
+      .from('posts')
+      .select('*', { count: 'exact', head: true })
+      .eq('author_id', user.id),
+  ]);
 
   async function updateHeraldry(formData: FormData) {
     'use server';
@@ -84,28 +100,85 @@ export default async function ProfilePage() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-12">
-      <div className="flex justify-between items-end border-b-2 border-gold-600 pb-4 mb-8">
-        <div>
-          <h1 className="text-4xl font-serif text-gold-accent tracking-widest mb-2 flex items-center gap-3">
-            <Shield className="text-gold-500 w-8 h-8" />
-            Your Heraldry
-          </h1>
-          <p className="text-parchment-300 italic">Declare your titles, lineage, and crest to the realm.</p>
+      <PageHeader
+        eyebrow="Member Heraldry"
+        title="Your Heraldry"
+        description="Declare your titles, current banner, and next steps from a single hall of record."
+        actions={
+          <form action={signOut}>
+            <button type="submit" className="flex items-center gap-2 border border-blood-600 bg-blood-600/20 px-4 py-2 font-serif text-sm uppercase tracking-widest text-blood-600 transition hover:bg-blood-600 hover:text-parchment-200">
+              <LogOut className="w-4 h-4" /> Depart
+            </button>
+          </form>
+        }
+      />
+
+      <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-[1.3fr_1fr]">
+        <ParchmentCard className="p-8">
+          <div className="flex flex-col gap-6 sm:flex-row">
+            <div className="flex h-32 w-32 shrink-0 items-center justify-center overflow-hidden border-4 border-gold-600 bg-iron-900">
+              {profile?.avatar_url ? (
+                <Image src={profile.avatar_url} alt="Crest" width={160} height={160} className="h-full w-full object-cover" />
+              ) : (
+                <Shield className="h-12 w-12 text-leather-700 opacity-50" />
+              )}
+            </div>
+            <div className="flex-1">
+              <p className="text-xs uppercase tracking-[0.25em] text-leather-700">Declared Identity</p>
+              <h2 className="mt-2 font-serif text-3xl text-ink-900">
+                {profile?.username || profile?.full_name || 'Unnamed Wanderer'}
+              </h2>
+              {profile?.full_name && profile?.username && profile.full_name !== profile.username ? (
+                <p className="mt-1 text-sm italic text-leather-700">{profile.full_name}</p>
+              ) : null}
+              <div className="mt-4 flex flex-wrap gap-3 text-xs uppercase tracking-[0.2em] text-leather-900">
+                <span className="border border-gold-600/60 bg-gold-500/10 px-3 py-2">{profile?.role || 'patron'}</span>
+                <span className="border border-leather-800/50 bg-parchment-100 px-3 py-2">
+                  {profile?.guilds?.name || 'Lone Wanderer'}
+                </span>
+              </div>
+              <p className="mt-4 text-sm leading-relaxed text-leather-900">
+                {profile?.bio || 'No lore has yet been recorded for this member.'}
+              </p>
+            </div>
+          </div>
+        </ParchmentCard>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 lg:grid-cols-1">
+          <StatPill label="Listed Wares" value={productCount || 0} />
+          <StatPill label="Pinned Notices" value={postCount || 0} />
+          <StatPill label="Current Guild" value={profile?.guilds?.name || 'None'} />
         </div>
-        <form action={signOut}>
-          <button type="submit" className="flex items-center gap-2 px-4 py-2 bg-blood-600/20 text-blood-600 border border-blood-600 hover:bg-blood-600 hover:text-parchment-200 transition font-serif text-sm uppercase tracking-widest">
-            <LogOut className="w-4 h-4" /> Depart
-          </button>
-        </form>
       </div>
 
-      <div className="bg-parchment p-8 sm:p-12 border-4 border-iron-800 shadow-[0_0_40px_rgba(0,0,0,0.5)]">
+      <ParchmentCard className="mb-8 p-6">
+        <div className="flex flex-col gap-4">
+          <p className="text-xs uppercase tracking-[0.3em] text-leather-700">Quick Actions</p>
+          <div className="flex flex-wrap gap-3">
+            {profile?.role === 'artisan' ? (
+              <>
+                <ThemedLinkButton href="/marketplace/new" icon={<Crown className="h-4 w-4" />}>Forge New Work</ThemedLinkButton>
+                <ThemedLinkButton href="/marketplace/my-listings" variant="secondary" icon={<ScrollText className="h-4 w-4" />}>Manage Listings</ThemedLinkButton>
+                <ThemedLinkButton href="/marketplace" variant="secondary">Visit Bazaar</ThemedLinkButton>
+              </>
+            ) : (
+              <>
+                <ThemedLinkButton href="/guilds" icon={<Crown className="h-4 w-4" />}>Browse Guilds</ThemedLinkButton>
+                <ThemedLinkButton href="/tavern" variant="secondary" icon={<Swords className="h-4 w-4" />}>Visit Tavern</ThemedLinkButton>
+                <ThemedLinkButton href="/marketplace" variant="secondary" icon={<ScrollText className="h-4 w-4" />}>Browse Bazaar</ThemedLinkButton>
+              </>
+            )}
+          </div>
+        </div>
+      </ParchmentCard>
+
+      <ParchmentCard className="p-8 sm:p-12">
         <form action={updateHeraldry} className="flex flex-col gap-6">
           
           <div className="flex flex-col sm:flex-row gap-6 items-center border-b-2 border-dashed border-leather-800 pb-8">
             <div className="w-32 h-32 bg-iron-900 border-4 border-gold-600 flex-shrink-0 flex items-center justify-center overflow-hidden">
               {profile?.avatar_url ? (
-                <img src={profile.avatar_url} alt="Crest" className="w-full h-full object-cover" />
+                <Image src={profile.avatar_url} alt="Crest" width={160} height={160} className="h-full w-full object-cover" />
               ) : (
                 <Shield className="w-12 h-12 text-leather-700 opacity-50" />
               )}
@@ -200,7 +273,7 @@ export default async function ProfilePage() {
             </button>
           </div>
         </form>
-      </div>
+      </ParchmentCard>
     </div>
   );
 }
