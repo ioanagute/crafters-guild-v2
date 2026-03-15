@@ -167,6 +167,7 @@ export default function MarketplaceCatalogClient({
                     width={480}
                     height={320}
                     className="h-full w-full object-cover"
+                    unoptimized
                   />
                 ) : (
                   <Package className="h-16 w-16 text-leather-700 opacity-50" />

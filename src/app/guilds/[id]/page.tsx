@@ -118,6 +118,7 @@ export default async function GuildDetailPage({
                   width={224}
                   height={224}
                   className="h-full w-full object-cover"
+                  unoptimized
                 />
               ) : (
                 <Crown className="h-12 w-12 text-leather-700 opacity-60" />

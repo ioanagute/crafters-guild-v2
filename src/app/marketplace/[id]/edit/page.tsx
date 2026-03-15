@@ -55,15 +55,12 @@ export default async function EditListingPage({
     .from("products")
     .select("id, crafter_id, title, category, price, description, image_url, stock")
     .eq("id", id)
+    .eq("crafter_id", user.id)
     .maybeSingle();
 
   const editableProduct = product as EditableProduct | null;
 
   if (!editableProduct) {
-    notFound();
-  }
-
-  if (editableProduct.crafter_id !== user.id) {
     return (
       <div className="mx-auto w-full max-w-5xl px-4 py-12">
         <StatePanel
@@ -92,7 +89,22 @@ export default async function EditListingPage({
       stock: Number(formData.get("stock")),
     };
 
-    await supabase.from("products").update(payload).eq("id", id).eq("crafter_id", user.id);
+    const { error, data } = await supabase
+      .from("products")
+      .update(payload)
+      .eq("id", id)
+      .eq("crafter_id", user.id)
+      .select("id")
+      .maybeSingle();
+
+    if (error) {
+      console.error("Failed to update marketplace listing:", error);
+      notFound();
+    }
+
+    if (!data) {
+      return;
+    }
 
     revalidatePath("/marketplace");
     revalidatePath("/marketplace/my-listings");

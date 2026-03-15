@@ -22,6 +22,8 @@ export async function login(formData: FormData) {
   }
 
   revalidatePath('/', 'layout')
+  revalidatePath('/marketplace')
+  revalidatePath('/marketplace/my-listings')
   redirect('/tavern')
 }
 
@@ -48,5 +50,7 @@ export async function signup(formData: FormData) {
   }
 
   revalidatePath('/', 'layout')
+  revalidatePath('/marketplace')
+  revalidatePath('/marketplace/my-listings')
   redirect('/tavern')
 }

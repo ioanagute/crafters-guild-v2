@@ -95,6 +95,9 @@ export default async function ProfilePage() {
     'use server';
     const supabase = await createClient();
     await supabase.auth.signOut();
+    revalidatePath('/', 'layout');
+    revalidatePath('/marketplace');
+    revalidatePath('/marketplace/my-listings');
     redirect('/');
   }
 
@@ -118,7 +121,7 @@ export default async function ProfilePage() {
           <div className="flex flex-col gap-6 sm:flex-row">
             <div className="flex h-32 w-32 shrink-0 items-center justify-center overflow-hidden border-4 border-gold-600 bg-iron-900">
               {profile?.avatar_url ? (
-                <Image src={profile.avatar_url} alt="Crest" width={160} height={160} className="h-full w-full object-cover" />
+                <Image src={profile.avatar_url} alt="Crest" width={160} height={160} className="h-full w-full object-cover" unoptimized />
               ) : (
                 <Shield className="h-12 w-12 text-leather-700 opacity-50" />
               )}
@@ -178,7 +181,7 @@ export default async function ProfilePage() {
           <div className="flex flex-col sm:flex-row gap-6 items-center border-b-2 border-dashed border-leather-800 pb-8">
             <div className="w-32 h-32 bg-iron-900 border-4 border-gold-600 flex-shrink-0 flex items-center justify-center overflow-hidden">
               {profile?.avatar_url ? (
-                <Image src={profile.avatar_url} alt="Crest" width={160} height={160} className="h-full w-full object-cover" />
+                <Image src={profile.avatar_url} alt="Crest" width={160} height={160} className="h-full w-full object-cover" unoptimized />
               ) : (
                 <Shield className="w-12 h-12 text-leather-700 opacity-50" />
               )}

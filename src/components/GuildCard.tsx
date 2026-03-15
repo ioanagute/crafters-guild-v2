@@ -23,6 +23,7 @@ export default function GuildCard({ guild }: { guild: GuildListItem }) {
                 width={160}
                 height={160}
                 className="h-full w-full object-cover"
+                unoptimized
               />
             ) : (
               <Crown className="h-8 w-8 text-leather-700 opacity-60" />

@@ -48,6 +48,7 @@ export default function GuildMemberList({
                     width={96}
                     height={96}
                     className="h-full w-full object-cover"
+                    unoptimized
                   />
                 ) : (
                   <UserRound className="h-7 w-7 text-leather-700 opacity-60" />
