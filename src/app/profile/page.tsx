@@ -11,11 +11,23 @@ export default async function ProfilePage() {
     redirect('/login');
   }
 
+  // Fetch user profile WITH guild info
   const { data: profile } = await supabase
     .from('profiles')
-    .select('*')
+    .select(`
+      *,
+      guilds (
+        name
+      )
+    `)
     .eq('id', user.id)
     .single();
+
+  // Fetch all available guilds
+  const { data: guilds } = await supabase
+    .from('guilds')
+    .select('*')
+    .order('name');
 
   async function updateHeraldry(formData: FormData) {
     'use server';
@@ -28,13 +40,20 @@ export default async function ProfilePage() {
     const full_name = formData.get('full_name') as string;
     const bio = formData.get('bio') as string;
     const avatar_url = formData.get('avatar_url') as string;
+    const guild_id = formData.get('guild_id') as string;
 
-    const { error } = await supabase.from('profiles').update({
+    const updateData: any = {
       username,
       full_name,
       bio,
-      avatar_url
-    }).eq('id', user.id);
+      avatar_url,
+    };
+
+    if (guild_id) {
+      updateData.guild_id = guild_id;
+    }
+
+    const { error } = await supabase.from('profiles').update(updateData).eq('id', user.id);
 
     if (!error) {
       revalidatePath('/profile');
@@ -114,12 +133,29 @@ export default async function ProfilePage() {
             </div>
           </div>
 
-          <div className="flex flex-col gap-2">
-            <label className="font-serif text-ink-900 font-bold uppercase tracking-widest text-xs">Current Role within the Realm</label>
-            <div className="px-4 py-3 bg-iron-900 border-2 border-iron-800 text-gold-500 font-serif uppercase tracking-widest opacity-80 cursor-not-allowed">
-              {profile?.role || 'Patron'}
+          <div className="flex flex-col md:flex-row gap-6">
+            <div className="flex flex-col gap-2 w-full md:w-1/2">
+              <label className="font-serif text-ink-900 font-bold uppercase tracking-widest text-xs">Current Role within the Realm</label>
+              <div className="px-4 py-3 bg-iron-900 border-2 border-iron-800 text-gold-500 font-serif uppercase tracking-widest opacity-80 cursor-not-allowed">
+                {profile?.role || 'Patron'}
+              </div>
+              <p className="text-xs text-leather-700 italic">Roles are declared upon registration.</p>
             </div>
-            <p className="text-xs text-leather-700 italic">Roles are assigned by the Guildmaster (Database Admin). You may not change this yourself.</p>
+
+            <div className="flex flex-col gap-2 w-full md:w-1/2">
+              <label className="font-serif text-ink-900 font-bold uppercase tracking-widest text-xs">Guild Affiliation</label>
+              <select 
+                name="guild_id"
+                defaultValue={profile?.guild_id || ''}
+                className="px-4 py-3 bg-parchment-100 border-2 border-leather-800 text-ink-900 outline-none focus:border-gold-600 font-serif"
+              >
+                <option value="">Unaffiliated (Lone Wanderer)</option>
+                {guilds?.map((guild) => (
+                  <option key={guild.id} value={guild.id}>{guild.name}</option>
+                ))}
+              </select>
+              <p className="text-xs text-leather-700 italic">Join a guild to bear their colors in the Tavern.</p>
+            </div>
           </div>
 
           <div className="flex flex-col gap-2 mt-4">

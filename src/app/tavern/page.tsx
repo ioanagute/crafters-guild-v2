@@ -44,7 +44,12 @@ export default async function Tavern() {
       content,
       tier_required,
       created_at,
-      profiles:author_id ( username, full_name, role )
+      profiles:author_id ( 
+        username, 
+        full_name, 
+        role,
+        guilds (name)
+      )
     `)
     .order('created_at', { ascending: false });
 
@@ -122,6 +127,7 @@ export default async function Tavern() {
                   key={post.id}
                   author={post.profiles?.username || post.profiles?.full_name || 'Unknown Wanderer'}
                   role={post.profiles?.role || 'patron'}
+                  guildName={post.profiles?.guilds?.name}
                   time={timeAgo(post.created_at)}
                   content={post.content}
                   tier={post.tier_required !== 'Public' ? `${post.tier_required} Tier Exclusive` : undefined}
@@ -137,13 +143,15 @@ export default async function Tavern() {
   );
 }
 
-function Post({ author, role, time, content, tier }: { author: string, role: string, time: string, content: string, tier?: string }) {
+function Post({ author, role, guildName, time, content, tier }: { author: string, role: string, guildName?: string, time: string, content: string, tier?: string }) {
   return (
     <div className="border-b-2 border-dashed border-leather-800 pb-6 mb-6 last:border-0 relative">
       <div className="flex items-baseline justify-between mb-3">
         <div>
           <span className="font-serif font-bold text-xl text-ink-900 capitalize capitalize-first">{author}</span>
-          <span className="text-leather-700 ml-3 text-sm italic capitalize">{role}</span>
+          <span className="text-leather-700 ml-3 text-sm italic capitalize">
+            {role}{guildName ? ` of ${guildName}` : ''}
+          </span>
         </div>
         <span className="text-leather-800/70 text-sm font-serif">{time}</span>
       </div>
