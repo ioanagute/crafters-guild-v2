@@ -1,26 +1,62 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  --font-sans: var(--font-merriweather), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-serif: var(--font-cinzel), ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+
+  --color-parchment-100: #fefcf3;
+  --color-parchment-200: #f5eedc;
+  --color-parchment-300: #e3d2a6;
+  --color-parchment-400: #cbb47e;
+  
+  --color-iron-700: #4a5568;
+  --color-iron-800: #2d3748;
+  --color-iron-900: #1a202c;
+  
+  --color-leather-700: #5c4033;
+  --color-leather-800: #4a332a;
+  --color-leather-900: #30201a;
+
+  --color-gold-400: #ffd700;
+  --color-gold-500: #d4af37;
+  --color-gold-600: #aa8c2c;
+
+  --color-ink-900: #111111;
+  --color-blood-600: #8a0303;
+
+  --animate-flicker: flicker 3s infinite alternate;
+  --animate-pulse-slow: pulse-slow 4s infinite alternate;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+@keyframes flicker {
+  0% { opacity: 0.8; transform: scale(0.98); }
+  100% { opacity: 1; transform: scale(1); }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+@keyframes pulse-slow {
+  0% { box-shadow: 0 0 15px rgba(212,175,55,0.2); }
+  100% { box-shadow: 0 0 30px rgba(212,175,55,0.6); }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+html, body {
+  background-color: var(--color-iron-900);
+  background-image: radial-gradient(circle at 50% 0%, var(--color-iron-800) 0%, transparent 60%);
+  color: var(--color-parchment-200);
+  font-family: var(--font-sans);
+  min-height: 100vh;
+}
+
+.bg-parchment {
+  background-color: var(--color-parchment-200);
+  background-image: radial-gradient(var(--color-parchment-300) 2%, transparent 3%), radial-gradient(var(--color-parchment-300) 2%, transparent 3%);
+  background-position: 0 0, 50px 50px;
+  background-size: 100px 100px;
+  color: var(--color-ink-900);
+  box-shadow: inset 0 0 40px rgba(0,0,0,0.2), 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+}
+
+.text-gold-accent {
+  background: linear-gradient(135deg, var(--color-gold-400), var(--color-gold-600));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
