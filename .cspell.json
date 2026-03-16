@@ -23,7 +23,9 @@
     "leatherworking",
     "runecrafters",
     "crafters",
-    "Fprofile"
+    "Fprofile",
+    "vercel",
+    "Vercel"
   ],
   "ignorePaths": [
     "node_modules",
