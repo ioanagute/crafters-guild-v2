@@ -1,0 +1,38 @@
+{
+  "version": "0.2",
+  "language": "en",
+  "words": [
+    "supabase",
+    "Grom",
+    "lucide",
+    "revalidate",
+    "nextjs",
+    "tailwindcss",
+    "postcss",
+    "craftersguild",
+    "StatPill",
+    "ParchmentCard",
+    "ThemedLinkButton",
+    "PageHeader"
+  ],
+  "ignorePaths": [
+    "node_modules",
+    ".next",
+    "package-lock.json"
+  ],
+  "overrides": [
+    {
+      "filename": "supabase/**/*.sql",
+      "words": [
+        "pgcrypto",
+        "plpgsql",
+        "tgname",
+        "schemaname",
+        "Crafters",
+        "Forgemasters",
+        "leatherworking",
+        "runecrafters"
+      ]
+    }
+  ]
+}

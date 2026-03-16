@@ -3,35 +3,10 @@ import PageHeader from "@/components/PageHeader";
 import ParchmentCard from "@/components/ParchmentCard";
 import StatPill from "@/components/StatPill";
 import ThemedLinkButton from "@/components/ThemedLinkButton";
-import { createClient } from "@/utils/supabase/server";
-
-type LandingProduct = {
-  id: string;
-  title: string;
-  category: string;
-  price: number;
-};
-
-type LandingPost = {
-  id: string;
-  content: string;
-  tier_required: string;
-};
+import { getHomePageData } from "@/features/home/server/home";
 
 export default async function Home() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  const [{ data: products }, { data: guilds }, { data: posts }, { data: profile }] = await Promise.all([
-    supabase.from("products").select("id, title, category, price").order("created_at", { ascending: false }).limit(3),
-    supabase.from("guilds").select("id", { count: "exact" }),
-    supabase.from("posts").select("id, content, tier_required").order("created_at", { ascending: false }).limit(3),
-    user
-      ? supabase.from("profiles").select("role, guilds ( name )").eq("id", user.id).single()
-      : Promise.resolve({ data: null }),
-  ]);
-
-  const latestProducts = (products as LandingProduct[] | null) || [];
-  const latestPosts = (posts as LandingPost[] | null) || [];
+  const { user, profile, latestProducts, latestPosts, guildCount } = await getHomePageData();
 
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-12">
@@ -66,7 +41,7 @@ export default async function Home() {
         </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 lg:grid-cols-1">
-          <StatPill label="Guild Banners" value={guilds?.length || 0} />
+          <StatPill label="Guild Banners" value={guildCount} />
           <StatPill label="Fresh Wares" value={latestProducts.length} />
           <StatPill label="Recent Notices" value={latestPosts.length} />
         </div>

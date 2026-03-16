@@ -1,21 +1,6 @@
 import Link from "next/link";
 import { Crown, Shield, UserRound } from "lucide-react";
-
-type MembershipState =
-  | {
-      kind: "anonymous";
-    }
-  | {
-      kind: "unaffiliated";
-      username?: string | null;
-    }
-  | {
-      kind: "member";
-      username?: string | null;
-      guildId: string;
-      guildName: string;
-      isCurrentGuild?: boolean;
-    };
+import type { MembershipState } from "@/features/guilds/types";
 
 export default function GuildMembershipCallout({
   state,

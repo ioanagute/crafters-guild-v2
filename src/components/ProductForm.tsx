@@ -1,28 +1,30 @@
+import { MARKETPLACE_CATEGORIES } from "@/features/marketplace/types";
+import type { MarketplaceField } from "@/features/marketplace/types";
+
 type ProductFormValues = {
   title?: string | null;
   category?: string | null;
   price?: number | string | null;
   description?: string | null;
-  image_url?: string | null;
+  imageUrl?: string | null;
   stock?: number | null;
 };
 
-const categories = [
-  "Apparel",
-  "Weaponry",
-  "Armor",
-  "Consumable",
-  "Magic",
-  "Tool",
-  "Other",
-];
+function FieldError({ message }: { message?: string }) {
+  if (!message) return null;
+  return <p className="text-sm text-blood-700">{message}</p>;
+}
 
 export default function ProductForm({
   submitLabel,
   values,
+  fieldErrors,
+  isPending,
 }: {
   submitLabel: string;
   values?: ProductFormValues;
+  fieldErrors?: Partial<Record<MarketplaceField, string>>;
+  isPending?: boolean;
 }) {
   return (
     <div className="space-y-6">
@@ -37,6 +39,7 @@ export default function ProductForm({
           placeholder="e.g., Elven Silk Cloak"
           className="border-2 border-leather-800 bg-parchment-100 px-4 py-3 font-serif text-ink-900 outline-none placeholder:text-leather-700/50 focus:border-gold-600 focus:bg-white"
         />
+        <FieldError message={fieldErrors?.title} />
       </div>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
@@ -49,12 +52,13 @@ export default function ProductForm({
             defaultValue={values?.category || "Other"}
             className="border-2 border-leather-800 bg-parchment-100 px-4 py-3 font-serif text-ink-900 outline-none focus:border-gold-600 focus:bg-white"
           >
-            {categories.map((category) => (
+            {MARKETPLACE_CATEGORIES.map((category) => (
               <option key={category} value={category}>
                 {category}
               </option>
             ))}
           </select>
+          <FieldError message={fieldErrors?.category} />
         </div>
 
         <div className="flex flex-col gap-2">
@@ -71,6 +75,7 @@ export default function ProductForm({
             placeholder="100"
             className="border-2 border-leather-800 bg-parchment-100 px-4 py-3 font-serif text-ink-900 outline-none placeholder:text-leather-700/50 focus:border-gold-600 focus:bg-white"
           />
+          <FieldError message={fieldErrors?.price} />
         </div>
 
         <div className="flex flex-col gap-2">
@@ -85,6 +90,7 @@ export default function ProductForm({
             defaultValue={values?.stock ?? 1}
             className="border-2 border-leather-800 bg-parchment-100 px-4 py-3 font-serif text-ink-900 outline-none focus:border-gold-600 focus:bg-white"
           />
+          <FieldError message={fieldErrors?.stock} />
         </div>
       </div>
 
@@ -94,10 +100,11 @@ export default function ProductForm({
         </label>
         <input
           name="image_url"
-          defaultValue={values?.image_url || ""}
+          defaultValue={values?.imageUrl || ""}
           placeholder="https://example.com/relic.png"
           className="border-2 border-leather-800 bg-parchment-100 px-4 py-3 font-serif text-ink-900 outline-none placeholder:text-leather-700/50 focus:border-gold-600 focus:bg-white"
         />
+        <FieldError message={fieldErrors?.image_url} />
       </div>
 
       <div className="flex flex-col gap-2">
@@ -112,13 +119,15 @@ export default function ProductForm({
           placeholder="Tell the tale of its forging..."
           className="resize-none border-2 border-leather-800 bg-parchment-100 px-4 py-3 font-serif text-ink-900 outline-none placeholder:text-leather-700/50 focus:border-gold-600 focus:bg-white"
         />
+        <FieldError message={fieldErrors?.description} />
       </div>
 
       <button
         type="submit"
+        disabled={isPending}
         className="mt-6 w-full border-2 border-gold-600 bg-leather-800 py-4 font-serif text-xl tracking-wider text-parchment-200 shadow-[0_0_15px_rgba(212,175,55,0.2)] transition-all hover:bg-leather-700 hover:shadow-[0_0_25px_rgba(212,175,55,0.4)]"
       >
-        {submitLabel}
+        {isPending ? "Sealing..." : submitLabel}
       </button>
     </div>
   );

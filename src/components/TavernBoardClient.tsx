@@ -1,19 +1,11 @@
 'use client';
 
-import { useMemo, useState } from "react";
+import { useActionState, useMemo, useState } from "react";
 import { Edit3, Megaphone, Save, Send, ShieldAlert, Trash2 } from "lucide-react";
+import FormMessage from "@/components/FormMessage";
 import StatePanel from "@/components/StatePanel";
-
-export type TavernPostView = {
-  id: string;
-  content: string;
-  tier_required: string;
-  created_at: string;
-  authorName: string;
-  authorRole: string;
-  guildName?: string;
-  isOwner: boolean;
-};
+import { idleFormState } from "@/lib/form-action-state";
+import type { TavernPost } from "@/features/tavern/types";
 
 function timeAgo(dateString: string) {
   const date = new Date(dateString);
@@ -36,18 +28,19 @@ export default function TavernBoardClient({
   updatePostAction,
   deletePostAction,
 }: {
-  posts: TavernPostView[];
+  posts: TavernPost[];
   isAuthenticated: boolean;
-  createPostAction: (formData: FormData) => void | Promise<void>;
-  updatePostAction: (formData: FormData) => void | Promise<void>;
-  deletePostAction: (formData: FormData) => void | Promise<void>;
+  createPostAction: (state: import("@/features/tavern/types").TavernFormState, formData: FormData) => Promise<import("@/features/tavern/types").TavernFormState>;
+  updatePostAction: (state: import("@/features/tavern/types").TavernFormState, formData: FormData) => Promise<import("@/features/tavern/types").TavernFormState>;
+  deletePostAction: (state: import("@/lib/form-action-state").FormActionState, formData: FormData) => Promise<import("@/lib/form-action-state").FormActionState>;
 }) {
   const [filter, setFilter] = useState<"all" | "public" | "exclusive" | "mine">("all");
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [createState, createFormAction, isCreatePending] = useActionState(createPostAction, idleFormState());
 
   const filteredPosts = useMemo(() => {
-    if (filter === "public") return posts.filter((post) => post.tier_required === "Public");
-    if (filter === "exclusive") return posts.filter((post) => post.tier_required !== "Public");
+    if (filter === "public") return posts.filter((post) => post.tierRequired === "Public");
+    if (filter === "exclusive") return posts.filter((post) => post.tierRequired !== "Public");
     if (filter === "mine") return posts.filter((post) => post.isOwner);
     return posts;
   }, [filter, posts]);
@@ -56,7 +49,13 @@ export default function TavernBoardClient({
     <div className="bg-parchment flex-1 rounded-sm border-4 border-iron-800 p-8 shadow-[inset_0_0_60px_rgba(0,0,0,0.1)]">
       {isAuthenticated ? (
         <div className="mb-8 border-b-4 border-double border-leather-800 pb-8">
-          <form action={createPostAction} className="flex flex-col gap-3">
+          <form action={createFormAction} className="flex flex-col gap-3">
+            {createState.status === "error" && createState.message ? (
+              <FormMessage tone="error">{createState.message}</FormMessage>
+            ) : null}
+            {createState.status === "success" && createState.message ? (
+              <FormMessage tone="success">{createState.message}</FormMessage>
+            ) : null}
             <textarea
               name="content"
               required
@@ -64,6 +63,9 @@ export default function TavernBoardClient({
               className="w-full resize-none border-2 border-leather-700 bg-parchment-100 p-4 font-serif text-ink-900 outline-none focus:border-gold-600"
               rows={3}
             />
+            {createState.fieldErrors?.content ? (
+              <p className="text-sm text-blood-700">{createState.fieldErrors.content}</p>
+            ) : null}
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <select
                 name="tier_required"
@@ -76,10 +78,11 @@ export default function TavernBoardClient({
               </select>
               <button
                 type="submit"
+                disabled={isCreatePending}
                 className="inline-flex items-center justify-center gap-2 border border-gold-600 bg-leather-800 px-6 py-2 font-serif text-parchment-200 transition hover:bg-leather-700"
               >
                 <Send className="h-4 w-4" />
-                Post Notice
+                {isCreatePending ? "Posting..." : "Post Notice"}
               </button>
             </div>
           </form>
@@ -140,51 +143,21 @@ export default function TavernBoardClient({
                       {post.guildName ? ` of ${post.guildName}` : ""}
                     </span>
                   </div>
-                  {post.tier_required !== "Public" ? (
+                  {post.tierRequired !== "Public" ? (
                     <div className="mt-3 inline-block border border-gold-600 bg-gold-500/20 px-3 py-1 text-xs font-bold uppercase tracking-widest text-leather-900">
-                      {post.tier_required} Tier Exclusive
+                      {post.tierRequired} Tier Exclusive
                     </div>
                   ) : null}
                 </div>
-                <span className="text-sm font-serif text-leather-800/70">{timeAgo(post.created_at)}</span>
+                <span className="text-sm font-serif text-leather-800/70">{timeAgo(post.createdAt)}</span>
               </div>
 
               {editingId === post.id ? (
-                <form action={updatePostAction} className="space-y-3">
-                  <input type="hidden" name="id" value={post.id} />
-                  <textarea
-                    name="content"
-                    defaultValue={post.content}
-                    rows={4}
-                    className="w-full resize-none border-2 border-leather-700 bg-parchment-100 p-4 font-serif text-ink-900 outline-none focus:border-gold-600"
-                  />
-                  <div className="flex flex-wrap gap-3">
-                    <select
-                      name="tier_required"
-                      defaultValue={post.tier_required}
-                      className="border-2 border-leather-700 bg-parchment-100 px-3 py-2 font-serif text-xs uppercase tracking-widest text-ink-900 outline-none"
-                    >
-                      <option value="Public">Public Notice</option>
-                      <option value="Copper">Copper Tier+</option>
-                      <option value="Iron">Iron Tier+</option>
-                      <option value="Gold">Gold Tier Exclusive</option>
-                    </select>
-                    <button
-                      type="submit"
-                      className="inline-flex items-center gap-2 border border-gold-600 bg-leather-800 px-5 py-2 font-serif tracking-wider text-parchment-200 transition hover:bg-leather-700"
-                    >
-                      <Save className="h-4 w-4" />
-                      Save Notice
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setEditingId(null)}
-                      className="border border-leather-800 bg-parchment-100 px-5 py-2 font-serif tracking-wider text-leather-900"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </form>
+                <EditablePostForm
+                  post={post}
+                  action={updatePostAction}
+                  onCancel={() => setEditingId(null)}
+                />
               ) : (
                 <>
                   <p className="whitespace-pre-wrap font-serif text-lg leading-relaxed text-ink-900">
@@ -200,16 +173,7 @@ export default function TavernBoardClient({
                         <Edit3 className="h-4 w-4" />
                         Edit
                       </button>
-                      <form action={deletePostAction}>
-                        <input type="hidden" name="id" value={post.id} />
-                        <button
-                          type="submit"
-                          className="inline-flex items-center gap-2 border border-blood-600 bg-blood-600/10 px-4 py-2 font-serif text-sm tracking-wider text-blood-600 transition hover:bg-blood-600 hover:text-parchment-200"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                          Remove
-                        </button>
-                      </form>
+                      <DeleteNoticeForm id={post.id} action={deletePostAction} />
                     </div>
                   ) : null}
                 </>
@@ -219,5 +183,100 @@ export default function TavernBoardClient({
         )}
       </div>
     </div>
+  );
+}
+
+function EditablePostForm({
+  post,
+  action,
+  onCancel,
+}: {
+  post: TavernPost;
+  action: (
+    state: import("@/features/tavern/types").TavernFormState,
+    formData: FormData,
+  ) => Promise<import("@/features/tavern/types").TavernFormState>;
+  onCancel: () => void;
+}) {
+  const [state, formAction, isPending] = useActionState(action, idleFormState());
+
+  return (
+    <form action={formAction} className="space-y-3">
+      <input type="hidden" name="id" value={post.id} />
+      {state.status === "error" && state.message ? (
+        <FormMessage tone="error">{state.message}</FormMessage>
+      ) : null}
+      {state.status === "success" && state.message ? (
+        <FormMessage tone="success">{state.message}</FormMessage>
+      ) : null}
+      <textarea
+        name="content"
+        defaultValue={post.content}
+        rows={4}
+        className="w-full resize-none border-2 border-leather-700 bg-parchment-100 p-4 font-serif text-ink-900 outline-none focus:border-gold-600"
+      />
+      {state.fieldErrors?.content ? (
+        <p className="text-sm text-blood-700">{state.fieldErrors.content}</p>
+      ) : null}
+      <div className="flex flex-wrap gap-3">
+        <select
+          name="tier_required"
+          defaultValue={post.tierRequired}
+          className="border-2 border-leather-700 bg-parchment-100 px-3 py-2 font-serif text-xs uppercase tracking-widest text-ink-900 outline-none"
+        >
+          <option value="Public">Public Notice</option>
+          <option value="Copper">Copper Tier+</option>
+          <option value="Iron">Iron Tier+</option>
+          <option value="Gold">Gold Tier Exclusive</option>
+        </select>
+        <button
+          type="submit"
+          disabled={isPending}
+          className="inline-flex items-center gap-2 border border-gold-600 bg-leather-800 px-5 py-2 font-serif tracking-wider text-parchment-200 transition hover:bg-leather-700 disabled:opacity-70"
+        >
+          <Save className="h-4 w-4" />
+          {isPending ? "Saving..." : "Save Notice"}
+        </button>
+        <button
+          type="button"
+          onClick={onCancel}
+          className="border border-leather-800 bg-parchment-100 px-5 py-2 font-serif tracking-wider text-leather-900"
+        >
+          Cancel
+        </button>
+      </div>
+    </form>
+  );
+}
+
+function DeleteNoticeForm({
+  id,
+  action,
+}: {
+  id: string;
+  action: (
+    state: import("@/lib/form-action-state").FormActionState,
+    formData: FormData,
+  ) => Promise<import("@/lib/form-action-state").FormActionState>;
+}) {
+  const [state, formAction, isPending] = useActionState(action, idleFormState());
+
+  return (
+    <form action={formAction}>
+      <input type="hidden" name="id" value={id} />
+      {state.status === "error" && state.message ? (
+        <div className="mb-3">
+          <FormMessage tone="error">{state.message}</FormMessage>
+        </div>
+      ) : null}
+      <button
+        type="submit"
+        disabled={isPending}
+        className="inline-flex items-center gap-2 border border-blood-600 bg-blood-600/10 px-4 py-2 font-serif text-sm tracking-wider text-blood-600 transition hover:bg-blood-600 hover:text-parchment-200 disabled:opacity-70"
+      >
+        <Trash2 className="h-4 w-4" />
+        {isPending ? "Removing..." : "Remove"}
+      </button>
+    </form>
   );
 }

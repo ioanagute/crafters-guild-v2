@@ -9,20 +9,10 @@ import ParchmentCard from "@/components/ParchmentCard";
 import StatePanel from "@/components/StatePanel";
 import StatPill from "@/components/StatPill";
 import ThemedLinkButton from "@/components/ThemedLinkButton";
-
-export type MarketplaceProductCard = {
-  id: string;
-  title: string;
-  description: string;
-  price: number;
-  currency: string;
-  category: string;
-  image_url: string | null;
-  stock: number;
-  crafterName: string;
-  isOwner: boolean;
-  created_at: string;
-};
+import {
+  MARKETPLACE_CATEGORIES,
+  type MarketplaceProduct,
+} from "@/features/marketplace/types";
 
 type MarketplaceFilters = {
   query: string;
@@ -30,14 +20,14 @@ type MarketplaceFilters = {
   sort: "newest" | "price-asc" | "price-desc";
 };
 
-const categories = ["All", "Apparel", "Weaponry", "Armor", "Consumable", "Magic", "Tool", "Other"];
+const categories = ["All", ...MARKETPLACE_CATEGORIES];
 
-function sortProducts(products: MarketplaceProductCard[], sort: MarketplaceFilters["sort"]) {
+function sortProducts(products: MarketplaceProduct[], sort: MarketplaceFilters["sort"]) {
   const copy = [...products];
   if (sort === "price-asc") return copy.sort((a, b) => a.price - b.price);
   if (sort === "price-desc") return copy.sort((a, b) => b.price - a.price);
   return copy.sort(
-    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
   );
 }
 
@@ -45,7 +35,7 @@ export default function MarketplaceCatalogClient({
   products,
   isArtisan,
 }: {
-  products: MarketplaceProductCard[];
+  products: MarketplaceProduct[];
   isArtisan: boolean;
 }) {
   const [filters, setFilters] = useState<MarketplaceFilters>({
@@ -160,9 +150,9 @@ export default function MarketplaceCatalogClient({
           {filteredProducts.map((product) => (
             <ParchmentCard key={product.id} className="flex flex-col p-6">
               <div className="mb-4 flex h-56 items-center justify-center overflow-hidden border-2 border-leather-800 bg-iron-900/10">
-                {product.image_url ? (
+                {product.imageUrl ? (
                   <Image
-                    src={product.image_url}
+                    src={product.imageUrl}
                     alt={product.title}
                     width={480}
                     height={320}

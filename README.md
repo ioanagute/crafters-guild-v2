@@ -1,41 +1,145 @@
-<<<<<<< HEAD
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Crafters Guild V2
 
-## Getting Started
+Single-repo Next.js application for a medieval-fantasy crafting marketplace backed by Supabase auth, data, and realtime.
 
-First, run the development server:
+## Stack
+
+- Next.js 16 App Router
+- React 19
+- Tailwind CSS 4
+- Supabase SSR and browser clients
+- TypeScript
+- Vitest for module-level tests
+
+## Architecture
+
+- `src/app/`
+  Route composition only.
+- `src/features/<feature>/server/`
+  Server-side data access, mapping, validation, and business rules.
+- `src/features/<feature>/actions/`
+  Server actions used by forms and mutations.
+- `src/features/<feature>/types/`
+  Shared typed contracts between server modules and UI.
+- `src/lib/`
+  Shared auth, database typing, form parsing, action result, form action state, and error helpers.
+- `supabase/migrations/`
+  Canonical schema history.
+- `supabase/seed.sql`
+  Optional seed data for default guilds.
+
+Pages should compose feature data. Components should consume typed DTOs, not raw Supabase rows.
+Recoverable form failures should render inline on the originating page. Redirects are reserved for auth, session, and role failures.
+
+## Local Setup
+
+1. Install dependencies:
+
+```bash
+npm install
+```
+
+2. Copy environment values into `.env.local`:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=your-project-url.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+```
+
+3. Provision the database in Supabase:
+
+- Apply the SQL in `supabase/migrations/20260316000100_initial_schema.sql`
+- If you already have an existing Supabase project, apply `supabase/migrations/20260316000200_align_existing_projects.sql` instead of the baseline reset file
+- Optionally apply `supabase/seed.sql` to load starter guilds
+
+4. Start the app:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Commands
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- `npm run dev`
+  Start the local development server
+- `npm run lint`
+  Run ESLint
+- `npm run test`
+  Run Vitest
+- `npm run build`
+  Run a production build
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Quality Gates
 
-## Learn More
+- All changes are expected to pass:
+  - `npm run lint`
+  - `npm run test`
+  - `npm run build`
+- GitHub Actions runs the same checks in `.github/workflows/ci.yml`
 
-To learn more about Next.js, take a look at the following resources:
+## Route Map
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `/`
+  Landing overview
+- `/login`
+  Login and signup
+- `/marketplace`
+  Browse marketplace listings
+- `/marketplace/new`
+  Create listing for artisans
+- `/marketplace/my-listings`
+  Manage owned listings
+- `/marketplace/[id]/edit`
+  Edit owned listing
+- `/guilds`
+  Guild directory
+- `/guilds/[id]`
+  Guild detail and member roster
+- `/profile`
+  User profile and guild affiliation
+- `/tavern`
+  Noticeboard plus ephemeral realtime chat
+- `/error`
+  Shared error page
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Roles
 
-## Deploy on Vercel
+- `patron`
+  Default member role
+- `artisan`
+  Can create and manage marketplace listings
+- `apprentice`
+  Reserved in the schema and UI contract, not yet given special behavior
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Database Notes
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-=======
-# crafters-guild-v2
-a new version of crafter-s-guild 
->>>>>>> 58b052967213520803799f44eca1eeb7b5c23882
+- `profiles.guild_id` is part of the canonical schema and is no longer patched in separately
+- `supabase/migrations/20260316000200_align_existing_projects.sql` is the safe patch-style migration for existing Supabase projects
+- Root SQL files `supabase_schema.sql` and `add_guilds.sql` are kept only as deprecation markers
+- `src/lib/database.types.ts` is the shared application-side database contract and should be updated alongside schema changes
+- RLS currently allows:
+  - public reads for profiles, guilds, products, and posts
+  - owner-only profile/product/post mutations
+  - artisan-only product creation
+
+## Tests
+
+Current automated coverage focuses on:
+
+- marketplace input validation
+- marketplace action behavior and ownership failures
+- tavern post validation
+- tavern action behavior and ownership failures
+- guild membership state derivation
+- profile input normalization
+- profile action success flow
+
+These tests are intended as the baseline pattern for future feature work.
+
+## Contributor Rules
+
+- Pages compose feature data only.
+- Feature server modules own business logic and Supabase access.
+- Server actions validate input first and return inline form state for recoverable failures.
+- Redirects are only for auth/session/role failures or intentional post-success navigation.
+- Components should consume DTOs or action state, not raw database rows.

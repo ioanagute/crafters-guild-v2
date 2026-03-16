@@ -1,39 +1,18 @@
-import Link from "next/link";
-import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { Edit3, Package, Trash2 } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import ParchmentCard from "@/components/ParchmentCard";
 import StatePanel from "@/components/StatePanel";
 import StatPill from "@/components/StatPill";
 import ThemedLinkButton from "@/components/ThemedLinkButton";
-import { createClient } from "@/utils/supabase/server";
-
-type ManagedListing = {
-  id: string;
-  title: string;
-  price: number;
-  currency: string;
-  category: string;
-  stock: number | null;
-  created_at: string;
-};
+import { requireSessionProfile } from "@/lib/auth";
+import { deleteProductFormAction } from "@/features/marketplace/actions";
+import { listCurrentArtisanListings } from "@/features/marketplace/server/marketplace";
+import Link from "next/link";
 
 export default async function MyListingsPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { user, profile } = await requireSessionProfile("/login");
 
-  if (!user) {
-    redirect("/login");
-  }
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-
-  if (profile?.role !== "artisan") {
+  if (profile.role !== "artisan") {
     return (
       <div className="mx-auto w-full max-w-5xl px-4 py-12">
         <StatePanel
@@ -46,28 +25,7 @@ export default async function MyListingsPage() {
       </div>
     );
   }
-
-  async function deleteListing(formData: FormData) {
-    "use server";
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) return;
-
-    const id = formData.get("id") as string;
-    await supabase.from("products").delete().eq("id", id).eq("crafter_id", user.id);
-
-    revalidatePath("/marketplace");
-    revalidatePath("/marketplace/my-listings");
-  }
-
-  const { data: listings } = await supabase
-    .from("products")
-    .select("id, title, price, currency, category, stock, created_at")
-    .eq("crafter_id", user.id)
-    .order("created_at", { ascending: false });
-
-  const ownedListings = ((listings as ManagedListing[] | null) || []);
+  const ownedListings = await listCurrentArtisanListings(user.id);
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-12">
@@ -102,7 +60,7 @@ export default async function MyListingsPage() {
                   <div className="mt-3 flex flex-wrap gap-4 text-sm text-leather-800">
                     <span>{listing.price} {listing.currency}</span>
                     <span>Stock {listing.stock ?? 0}</span>
-                    <span>Listed {new Date(listing.created_at).toLocaleDateString()}</span>
+                    <span>Listed {new Date(listing.createdAt).toLocaleDateString()}</span>
                   </div>
                 </div>
 
@@ -114,7 +72,7 @@ export default async function MyListingsPage() {
                     <Edit3 className="h-4 w-4" />
                     Edit Listing
                   </Link>
-                  <form action={deleteListing}>
+                  <form action={deleteProductFormAction}>
                     <input type="hidden" name="id" value={listing.id} />
                     <button
                       type="submit"

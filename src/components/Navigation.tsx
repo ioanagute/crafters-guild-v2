@@ -1,9 +1,8 @@
-import { createClient } from '@/utils/supabase/server';
+import { getCurrentUser } from '@/lib/auth';
 import NavigationClient from '@/components/NavigationClient';
 
 export default async function Navigation() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   return <NavigationClient isAuthenticated={Boolean(user)} />;
 }
