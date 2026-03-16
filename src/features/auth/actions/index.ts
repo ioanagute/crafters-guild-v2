@@ -28,7 +28,6 @@ export async function submitAuthAction(
 ): Promise<AuthFormState> {
   void _previousState;
   const intent = readString(formData, "intent");
-  const role = readString(formData, "role") || "patron";
   const validated = validateAuthInput(formData);
 
   if (!validated.ok) {
@@ -41,11 +40,6 @@ export async function submitAuthAction(
     const { error } = await supabase.auth.signUp({
       email: validated.email,
       password: validated.password,
-      options: {
-        data: {
-          role,
-        },
-      },
     });
 
     if (error) {

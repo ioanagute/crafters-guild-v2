@@ -85,11 +85,6 @@ describe("submitAuthAction", () => {
     expect(signUpMock).toHaveBeenCalledWith({
       email: "member@example.com",
       password: "secret123",
-      options: {
-        data: {
-          role: "artisan",
-        },
-      },
     });
     expect(revalidatePathMock).toHaveBeenCalledWith("/", "layout");
     expect(redirectMock).toHaveBeenCalledWith("/tavern");

@@ -18,7 +18,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${cinzel.variable} ${merriweather.variable} antialiased min-h-screen flex flex-col`}
+        className={`${cinzel.variable} ${merriweather.variable} app-shell antialiased min-h-screen flex flex-col`}
       >
         <Navigation />
         <main className="flex-1 w-full flex flex-col">

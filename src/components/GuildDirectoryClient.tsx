@@ -42,17 +42,18 @@ export default function GuildDirectoryClient({
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-col gap-4 border-b-2 border-gold-600/60 pb-6 md:flex-row md:items-center md:justify-between">
+      <div className="section-panel px-5 py-5 md:px-6">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <p className="mb-2 text-xs uppercase tracking-[0.3em] text-gold-400">
+            <p className="mb-2 text-xs uppercase tracking-[0.3em] text-gold-400">
             Search The Charters
           </p>
-          <p className="text-sm text-parchment-300">
+            <p className="text-sm text-parchment-300">
             Seek a guild by its name, discipline, or written lore.
           </p>
         </div>
 
-        <label className="relative block w-full max-w-xl">
+          <label className="relative block w-full max-w-xl">
           <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-parchment-400" />
           <input
             type="text"
@@ -67,9 +68,10 @@ export default function GuildDirectoryClient({
             }}
             placeholder="Search guilds..."
             aria-label="Search guilds"
-            className="w-full border-2 border-iron-700 bg-iron-900 px-11 py-3 font-serif text-parchment-200 outline-none transition placeholder:text-iron-700 focus:border-gold-500"
+            className="min-h-12 w-full rounded-[1rem] border border-iron-700 bg-iron-900/90 px-11 py-3 font-serif text-parchment-100 outline-none transition placeholder:text-iron-500 focus:border-gold-500"
           />
         </label>
+      </div>
       </div>
 
       {query.trim() ? (
@@ -80,7 +82,7 @@ export default function GuildDirectoryClient({
               setQuery("");
               commitQuery("");
             }}
-            className="border border-iron-700 bg-iron-800 px-4 py-2 font-serif text-sm tracking-wider text-parchment-200 transition hover:border-gold-600 hover:bg-iron-700"
+            className="min-h-11 rounded-full border border-iron-700 bg-iron-800 px-4 py-2 font-serif text-sm tracking-[0.16em] text-parchment-200 transition hover:border-gold-600 hover:bg-iron-700"
           >
             Clear Search
           </button>
@@ -88,7 +90,7 @@ export default function GuildDirectoryClient({
       ) : null}
 
       {filteredGuilds.length === 0 ? (
-        <div className="border-2 border-dashed border-iron-700 bg-iron-800/60 px-6 py-12 text-center">
+        <div className="section-panel px-6 py-12 text-center">
           <p className="mb-2 font-serif text-2xl text-gold-400">No charter matches your search</p>
           <p className="text-sm text-parchment-300">
             Try another title or search by a craft named in the guild&apos;s lore.

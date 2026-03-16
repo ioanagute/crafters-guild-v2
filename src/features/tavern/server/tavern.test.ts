@@ -40,4 +40,20 @@ describe("validatePostInput", () => {
       });
     }
   });
+
+  it("rejects oversized tavern posts", () => {
+    const result = validatePostInput(
+      buildPostFormData({
+        content: "x".repeat(501),
+        tier_required: "Public",
+      }),
+    );
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.fieldErrors).toMatchObject({
+        content: "Post content must be 500 characters or fewer.",
+      });
+    }
+  });
 });

@@ -11,13 +11,14 @@ export default async function ErrorPage({ searchParams }: { searchParams: Promis
   const returnTo = params.returnTo || "/";
   
   return (
-    <div className="mx-auto flex min-h-[70vh] w-full max-w-4xl flex-col justify-center px-4 py-12">
+    <div className="page-shell">
+      <div className="page-stack min-h-[70vh] justify-center">
       <PageHeader
         eyebrow="The Pit"
         title="The Gates are Barred"
         description="A branded fallback hall for broken paths, failed credentials, and any other trouble that interrupts a journey through the realm."
       />
-      <ParchmentCard className="p-8 text-center sm:p-12">
+        <ParchmentCard variant="elevated" className="p-8 text-center sm:p-12">
         <StatePanel
           tone="error"
           title="The guards refuse passage"
@@ -36,6 +37,7 @@ export default async function ErrorPage({ searchParams }: { searchParams: Promis
           </Link>
         </div>
       </ParchmentCard>
+      </div>
     </div>
   )
 }

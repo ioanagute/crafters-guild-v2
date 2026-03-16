@@ -47,8 +47,32 @@ describe("validateProductInput", () => {
         title: "Title is required.",
         description: "Description is required.",
         category: "Select a valid category.",
-        price: "Price must be greater than zero.",
-        stock: "Stock must be zero or greater.",
+        price: "Price must be between 0.01 and 999999.99.",
+        stock: "Stock must be a whole number between 0 and 999999.",
+      });
+    }
+  });
+
+  it("rejects invalid image URLs and oversized content", () => {
+    const result = validateProductInput(
+      buildProductFormData({
+        title: "x".repeat(121),
+        description: "y".repeat(2001),
+        category: "Weaponry",
+        price: "1000000",
+        stock: "1000000",
+        image_url: "http://example.com/blade.png",
+      }),
+    );
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.fieldErrors).toMatchObject({
+        title: "Title must be 120 characters or fewer.",
+        description: "Description must be 2000 characters or fewer.",
+        price: "Price must be between 0.01 and 999999.99.",
+        stock: "Stock must be a whole number between 0 and 999999.",
+        image_url: "Image URL must be a valid HTTPS address.",
       });
     }
   });

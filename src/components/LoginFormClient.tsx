@@ -25,7 +25,6 @@ export default function LoginFormClient({
     () => ({
       email: state.fieldErrors?.email ? "email-error" : undefined,
       password: state.fieldErrors?.password ? "password-error" : undefined,
-      role: state.fieldErrors?.role ? "role-error role-help" : "role-help",
     }),
     [state.fieldErrors],
   );
@@ -46,7 +45,7 @@ export default function LoginFormClient({
             data-field-name="email"
             aria-invalid={Boolean(state.fieldErrors?.email)}
             aria-describedby={describedBy.email}
-            className="px-4 py-3 bg-parchment-100 border-2 border-leather-800 text-ink-900 outline-none focus:border-gold-600 focus:bg-white placeholder:text-leather-700/50 transition-all font-serif"
+            className="field-input font-serif"
             placeholder="artisan@realm.com"
           />
         </FormField>
@@ -63,40 +62,27 @@ export default function LoginFormClient({
             data-field-name="password"
             aria-invalid={Boolean(state.fieldErrors?.password)}
             aria-describedby={describedBy.password}
-            className="px-4 py-3 bg-parchment-100 border-2 border-leather-800 text-ink-900 outline-none focus:border-gold-600 focus:bg-white placeholder:text-leather-700/50 transition-all font-serif"
+            className="field-input font-serif"
           />
         </FormField>
         <FieldError id="password-error" message={state.fieldErrors?.password} />
       </div>
 
-      <FormField
-        label="Path of Registration (New Users Only)"
-        htmlFor="role"
-        helpTextId="role-help"
-        helpText="Veterans simply enter below. This choice only applies to new heraldry."
+      <p
+        id="registration-help"
+        className="rounded-[1rem] border border-leather-700 bg-leather-800/10 px-4 py-3 text-sm leading-relaxed text-leather-800"
       >
-        <select
-          id="role"
-          name="role"
-          data-field-name="role"
-          aria-invalid={Boolean(state.fieldErrors?.role)}
-          aria-describedby={describedBy.role}
-          className="px-4 py-3 bg-parchment-100 border-2 border-leather-800 text-ink-900 outline-none focus:border-gold-600 focus:bg-white font-serif"
-        >
-          <option value="patron">Patron (Wanderer & Supporter)</option>
-          <option value="artisan">Artisan (Master Crafter & Seller)</option>
-        </select>
-      </FormField>
-      <FieldError id="role-error" message={state.fieldErrors?.role} />
+        New accounts begin as patrons. Artisan access is granted separately after approval.
+      </p>
 
-      <div className="flex flex-col gap-3 mt-4">
+      <div className="mt-4 grid grid-cols-1 gap-3">
         <PendingButton
           type="submit"
           pending={isPending && intent === "login"}
           idleLabel="Enter the Guild"
           pendingLabel="Entering..."
           icon={<Shield className="h-4 w-4" />}
-          className="w-full py-3 bg-iron-900 hover:bg-iron-800 text-parchment-200 font-serif border-2 border-iron-800 hover:border-gold-500 transition-all tracking-wider shadow-lg flex items-center justify-center gap-2 disabled:opacity-70"
+          className="flex min-h-12 w-full items-center justify-center gap-2 rounded-[1rem] border border-iron-900 bg-iron-900 py-3 font-serif tracking-[0.16em] text-parchment-200 shadow-lg disabled:opacity-70"
           ariaLabel="Enter the Guild"
           disabled={isPending}
           onClick={() => setIntent("login")}
@@ -105,7 +91,7 @@ export default function LoginFormClient({
           type="submit"
           onClick={() => setIntent("signup")}
           disabled={isPending}
-          className="w-full py-3 bg-transparent hover:bg-leather-800/10 text-ink-900 font-serif border-2 border-leather-800 transition-all tracking-wider flex items-center justify-center gap-2 disabled:opacity-70"
+          className="flex min-h-12 w-full items-center justify-center gap-2 rounded-[1rem] border border-leather-800 bg-transparent py-3 font-serif tracking-[0.16em] text-ink-900 disabled:opacity-70"
         >
           {isPending && intent === "signup" ? "Registering..." : "Register New Heraldry"}
         </button>

@@ -1,6 +1,7 @@
 import { fail, ok } from "@/lib/action-result";
 import type { Database } from "@/lib/database.types";
 import { readString } from "@/lib/forms";
+import { validateLength } from "@/lib/validation";
 import { createClient } from "@/utils/supabase/server";
 import { getCurrentSessionProfile, requireSessionProfile } from "@/lib/auth";
 import {
@@ -49,6 +50,9 @@ export function validatePostInput(formData: FormData) {
   const fieldErrors: Record<string, string> = {};
 
   if (!content) fieldErrors.content = "Post content is required.";
+  if (content && !validateLength(content, { max: 500 })) {
+    fieldErrors.content = "Post content must be 500 characters or fewer.";
+  }
   if (!isTavernTier(tierRequired)) fieldErrors.tier_required = "Select a valid tavern tier.";
 
   if (Object.keys(fieldErrors).length > 0) {
@@ -60,25 +64,29 @@ export function validatePostInput(formData: FormData) {
 
 export async function getTavernPageData() {
   const supabase = await createClient();
-  const [session, { data: posts }] = await Promise.all([
-    getCurrentSessionProfile(),
-    supabase
-      .from("posts")
-      .select(`
-        id,
-        author_id,
-        content,
-        tier_required,
-        created_at,
-        profiles:author_id (
-          username,
-          full_name,
-          role,
-          guilds (name)
-        )
-      `)
-      .order("created_at", { ascending: false }),
-  ]);
+  const session = await getCurrentSessionProfile();
+  let query = supabase
+    .from("posts")
+    .select(`
+      id,
+      author_id,
+      content,
+      tier_required,
+      created_at,
+      profiles:author_id (
+        username,
+        full_name,
+        role,
+        guilds (name)
+      )
+    `)
+    .order("created_at", { ascending: false });
+
+  if (!session.user) {
+    query = query.eq("tier_required", "Public");
+  }
+
+  const { data: posts } = await query;
 
   const viewerId = session.user?.id ?? null;
 

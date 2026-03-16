@@ -13,7 +13,7 @@ export default function GuildMembershipCallout({
 
   if (state.kind === "anonymous") {
     return (
-      <section className="border-2 border-iron-700 bg-iron-800/80 p-6 shadow-2xl">
+      <section className="section-panel px-6 py-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
             <p className="mb-2 text-xs uppercase tracking-[0.3em] text-gold-400">
@@ -29,7 +29,7 @@ export default function GuildMembershipCallout({
           </div>
           <Link
             href="/login"
-            className="inline-flex items-center gap-2 self-start border-2 border-gold-600 bg-leather-800 px-5 py-3 font-serif tracking-wider text-gold-400 transition hover:bg-leather-700 hover:text-gold-300"
+            className="inline-flex min-h-12 items-center gap-2 self-start rounded-[1rem] border border-gold-600 bg-leather-800 px-5 py-3 font-serif tracking-[0.18em] text-gold-300 transition hover:bg-leather-700 hover:text-gold-200"
           >
             <Shield className="h-4 w-4" />
             Enter
@@ -41,7 +41,7 @@ export default function GuildMembershipCallout({
 
   if (state.kind === "unaffiliated") {
     return (
-      <section className="border-2 border-gold-600/70 bg-iron-800/70 p-6 shadow-2xl">
+      <section className="section-panel px-6 py-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
             <p className="mb-2 text-xs uppercase tracking-[0.3em] text-gold-400">
@@ -58,7 +58,7 @@ export default function GuildMembershipCallout({
           </div>
           <Link
             href="/profile"
-            className="inline-flex items-center gap-2 self-start border-2 border-gold-600 bg-leather-800 px-5 py-3 font-serif tracking-wider text-gold-400 transition hover:bg-leather-700 hover:text-gold-300"
+            className="inline-flex min-h-12 items-center gap-2 self-start rounded-[1rem] border border-gold-600 bg-leather-800 px-5 py-3 font-serif tracking-[0.18em] text-gold-300 transition hover:bg-leather-700 hover:text-gold-200"
           >
             <UserRound className="h-4 w-4" />
             Open Heraldry
@@ -69,7 +69,7 @@ export default function GuildMembershipCallout({
   }
 
   return (
-    <section className="border-2 border-gold-600/70 bg-iron-800/70 p-6 shadow-2xl">
+    <section className="section-panel px-6 py-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <p className="mb-2 text-xs uppercase tracking-[0.3em] text-gold-400">
@@ -90,7 +90,7 @@ export default function GuildMembershipCallout({
           {!state.isCurrentGuild && (
             <Link
               href={`/guilds/${state.guildId}`}
-              className="inline-flex items-center gap-2 self-start border border-iron-600 bg-iron-900 px-4 py-3 font-serif text-sm tracking-wider text-parchment-200 transition hover:border-gold-600"
+              className="inline-flex min-h-12 items-center gap-2 self-start rounded-[1rem] border border-iron-600 bg-iron-900 px-4 py-3 font-serif text-sm tracking-[0.16em] text-parchment-200 transition hover:border-gold-600"
             >
               <Crown className="h-4 w-4 text-gold-500" />
               View Guild
@@ -98,7 +98,7 @@ export default function GuildMembershipCallout({
           )}
           <Link
             href="/profile"
-            className="inline-flex items-center gap-2 self-start border-2 border-gold-600 bg-leather-800 px-5 py-3 font-serif tracking-wider text-gold-400 transition hover:bg-leather-700 hover:text-gold-300"
+            className="inline-flex min-h-12 items-center gap-2 self-start rounded-[1rem] border border-gold-600 bg-leather-800 px-5 py-3 font-serif tracking-[0.18em] text-gold-300 transition hover:bg-leather-700 hover:text-gold-200"
           >
             <Shield className="h-4 w-4" />
             Manage in Heraldry

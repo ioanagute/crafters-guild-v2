@@ -1,5 +1,6 @@
 import type { ActionResult } from "@/lib/action-result";
 import type { FormActionState } from "@/lib/form-action-state";
+import type { MarketplaceSort } from "@/lib/filters";
 
 export const MARKETPLACE_CATEGORIES = [
   "Apparel",
@@ -58,6 +59,17 @@ export type CreateProductInput = {
 };
 
 export type UpdateProductInput = CreateProductInput;
+
+export type MarketplaceCatalogPage = {
+  products: MarketplaceProduct[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  hasNextPage: boolean;
+  sort: MarketplaceSort;
+  query: string;
+  category: string;
+};
 
 export type ProductMutationResult = ActionResult<{ id: string }>;
 export type MarketplaceField =

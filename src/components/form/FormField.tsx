@@ -9,7 +9,7 @@ export default function FormField({
   error,
   helpTextId,
   className = "flex flex-col gap-2",
-  labelClassName = "font-serif text-ink-900 font-bold uppercase tracking-widest text-xs",
+  labelClassName = "font-serif text-ink-900 font-bold uppercase tracking-[0.28em] text-[0.68rem]",
   children,
 }: {
   label: string;
@@ -31,7 +31,7 @@ export default function FormField({
       {helpText ? (
         <p
           id={helpTextId}
-          className="text-xs text-leather-700 italic"
+          className="text-xs leading-relaxed text-leather-700 italic"
         >
           {helpText}
         </p>

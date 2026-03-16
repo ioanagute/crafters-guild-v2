@@ -1,5 +1,5 @@
-import Image from "next/image";
 import { Shield, UserRound } from "lucide-react";
+import RemoteImage from "@/components/RemoteImage";
 import StatePanel from "@/components/StatePanel";
 import type { GuildMember } from "@/features/guilds/types";
 
@@ -29,18 +29,15 @@ export default function GuildMemberList({
         return (
           <article
             key={member.id}
-            className="bg-parchment border-2 border-leather-800 p-5 shadow-[0_10px_25px_rgba(0,0,0,0.2)]"
+            className="bg-parchment rounded-[1.3rem] border border-leather-800/70 p-5 shadow-[0_16px_30px_rgba(0,0,0,0.2)]"
           >
             <div className="mb-4 flex items-start gap-4 border-b border-dashed border-leather-800/50 pb-4">
-              <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden border-2 border-gold-600 bg-iron-900/10">
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-[0.95rem] border-2 border-gold-600 bg-iron-900/10">
                 {member.avatarUrl ? (
-                  <Image
+                  <RemoteImage
                     src={member.avatarUrl}
                     alt={`${displayName} crest`}
-                    width={96}
-                    height={96}
                     className="h-full w-full object-cover"
-                    unoptimized
                   />
                 ) : (
                   <UserRound className="h-7 w-7 text-leather-700 opacity-60" />
@@ -51,7 +48,7 @@ export default function GuildMemberList({
                 {member.fullName && member.username && member.fullName !== member.username && (
                   <p className="text-sm italic text-leather-700">{member.fullName}</p>
                 )}
-                <p className="mt-2 inline-block border border-gold-600/60 bg-gold-500/10 px-3 py-1 text-xs uppercase tracking-[0.25em] text-leather-900">
+                <p className="mt-2 inline-block rounded-full border border-gold-600/60 bg-gold-500/10 px-3 py-1 text-xs uppercase tracking-[0.25em] text-leather-900">
                   {role}
                 </p>
               </div>

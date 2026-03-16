@@ -6,7 +6,8 @@ export function sanitizeMarketplaceFilters(input: {
   category?: string | null;
   sort?: string | null;
   validCategories: readonly string[];
-}): { query: string; category: string; sort: MarketplaceSort } {
+  page?: string | number | null;
+}): { query: string; category: string; sort: MarketplaceSort; page: number } {
   const query = input.query?.trim() ?? "";
   const category =
     input.category && input.validCategories.includes(input.category)
@@ -16,8 +17,10 @@ export function sanitizeMarketplaceFilters(input: {
     input.sort === "price-asc" || input.sort === "price-desc" || input.sort === "newest"
       ? input.sort
       : "newest";
+  const rawPage = typeof input.page === "number" ? input.page : Number(input.page ?? 1);
+  const page = Number.isInteger(rawPage) && rawPage > 0 ? rawPage : 1;
 
-  return { query, category, sort };
+  return { query, category, sort, page };
 }
 
 export function sanitizeGuildQuery(query?: string | null) {

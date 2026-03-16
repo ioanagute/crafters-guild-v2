@@ -1,129 +1,64 @@
 'use client';
 
-import { useEffect, useMemo, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { Package, Search, SlidersHorizontal, UserCircle2 } from "lucide-react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import PageHeader from "@/components/PageHeader";
 import ParchmentCard from "@/components/ParchmentCard";
+import RemoteImage from "@/components/RemoteImage";
 import StatePanel from "@/components/StatePanel";
 import StatPill from "@/components/StatPill";
 import ThemedLinkButton from "@/components/ThemedLinkButton";
 import { buildSearchParams, sanitizeMarketplaceFilters } from "@/lib/filters";
 import {
   MARKETPLACE_CATEGORIES,
-  type MarketplaceProduct,
+  type MarketplaceCatalogPage,
 } from "@/features/marketplace/types";
 
 type MarketplaceFilters = {
   query: string;
   category: string;
   sort: "newest" | "price-asc" | "price-desc";
+  page: number;
 };
 
 const categories = ["All", ...MARKETPLACE_CATEGORIES];
 
-function sortProducts(products: MarketplaceProduct[], sort: MarketplaceFilters["sort"]) {
-  const copy = [...products];
-  if (sort === "price-asc") return copy.sort((a, b) => a.price - b.price);
-  if (sort === "price-desc") return copy.sort((a, b) => b.price - a.price);
-  return copy.sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-  );
-}
-
 export default function MarketplaceCatalogClient({
-  products,
+  catalog,
   isArtisan,
 }: {
-  products: MarketplaceProduct[];
+  catalog: MarketplaceCatalogPage;
   isArtisan: boolean;
 }) {
-  const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
-  const urlFilters = useMemo(
-    () =>
-      sanitizeMarketplaceFilters({
-        query: searchParams.get("query"),
-        category: searchParams.get("category"),
-        sort: searchParams.get("sort"),
-        validCategories: categories,
-      }),
-    [searchParams],
-  );
-  const [filters, setFilters] = useState<MarketplaceFilters>(() => urlFilters);
-
-  useEffect(() => {
-    const id = window.setTimeout(() => {
-      setFilters((current) => {
-        const next = {
-          ...current,
-          category: urlFilters.category,
-          sort: urlFilters.sort,
-        };
-
-        if (current.query === urlFilters.query) {
-          next.query = urlFilters.query;
-        }
-
-        return next.query === current.query &&
-          next.category === current.category &&
-          next.sort === current.sort
-          ? current
-          : next;
-      });
-    }, 0);
-
-    return () => window.clearTimeout(id);
-  }, [urlFilters.category, urlFilters.query, urlFilters.sort]);
 
   function commitFilters(nextFilters: MarketplaceFilters) {
     const normalized = sanitizeMarketplaceFilters({
       query: nextFilters.query,
       category: nextFilters.category,
       sort: nextFilters.sort,
+      page: nextFilters.page,
       validCategories: categories,
     });
-
-    if (
-      normalized.query === urlFilters.query &&
-      normalized.category === urlFilters.category &&
-      normalized.sort === urlFilters.sort
-    ) {
-      return;
-    }
-
     const next = buildSearchParams({
-      query: normalized.query,
+      query: normalized.query || null,
       category: normalized.category !== "All" ? normalized.category : null,
       sort: normalized.sort !== "newest" ? normalized.sort : null,
+      page: normalized.page > 1 ? normalized.page : null,
     });
     const nextUrl = next.toString() ? `${pathname}?${next.toString()}` : pathname;
     router.replace(nextUrl, { scroll: false });
   }
 
-  const filteredProducts = useMemo(() => {
-    const query = filters.query.trim().toLowerCase();
-    const matching = products.filter((product) => {
-      const matchesCategory =
-        filters.category === "All" || product.category === filters.category;
-      const haystack = [product.title, product.category, product.description, product.crafterName]
-        .join(" ")
-        .toLowerCase();
-
-      return matchesCategory && (!query || haystack.includes(query));
-    });
-
-    return sortProducts(matching, filters.sort);
-  }, [filters.query, filters.category, filters.sort, products]);
-
   const hasActiveFilters =
-    filters.query.trim().length > 0 || filters.category !== "All" || filters.sort !== "newest";
+    catalog.query.trim().length > 0 || catalog.category !== "All" || catalog.sort !== "newest";
+  const totalPages = Math.max(1, Math.ceil(catalog.totalCount / catalog.pageSize));
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 py-12">
+    <div className="page-shell">
+      <div className="page-stack">
       <PageHeader
         eyebrow="The Grand Bazaar"
         title="Trade in Crafted Wonders"
@@ -138,43 +73,56 @@ export default function MarketplaceCatalogClient({
                 </ThemedLinkButton>
               </>
             ) : null}
-            <StatPill label="Available Wares" value={products.length} />
+            <StatPill label="Available Wares" value={catalog.totalCount} />
           </>
         }
       />
 
-      <div className="mb-8 grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_220px_220px]">
+        <div className="section-panel grid grid-cols-1 gap-4 px-5 py-5 lg:grid-cols-[minmax(0,1fr)_220px_220px_auto] lg:items-center lg:px-6">
         <label className="relative block">
           <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-parchment-400" />
           <input
             aria-label="Search marketplace listings"
             type="text"
-            value={filters.query}
-            onChange={(event) =>
-              setFilters((current) => ({ ...current, query: event.target.value }))
+            key={catalog.query}
+            defaultValue={catalog.query}
+            onBlur={(event) =>
+              commitFilters({
+                query: event.target.value,
+                category: catalog.category,
+                sort: catalog.sort,
+                page: 1,
+              })
             }
-            onBlur={(event) => commitFilters({ ...filters, query: event.target.value })}
             onKeyDown={(event) => {
               if (event.key === "Enter") {
                 event.preventDefault();
-                commitFilters(filters);
+                commitFilters({
+                  query: event.currentTarget.value,
+                  category: catalog.category,
+                  sort: catalog.sort,
+                  page: 1,
+                });
               }
             }}
-            placeholder="Search wares, crafters, or categories..."
-            className="w-full border-2 border-iron-700 bg-iron-900 px-11 py-3 font-serif text-parchment-200 outline-none placeholder:text-iron-700 focus:border-gold-500"
+            placeholder="Search wares or categories..."
+            className="min-h-12 w-full rounded-[1rem] border border-iron-700 bg-iron-900 px-11 py-3 font-serif text-parchment-100 outline-none placeholder:text-iron-500 focus:border-gold-500"
           />
         </label>
 
-        <label className="flex items-center gap-3 border-2 border-iron-700 bg-iron-900 px-4 py-3 font-serif text-parchment-200">
+        <label className="flex min-h-12 items-center gap-3 rounded-[1rem] border border-iron-700 bg-iron-900 px-4 py-3 font-serif text-parchment-100">
           <SlidersHorizontal className="h-4 w-4 text-gold-500" />
           <select
-            value={filters.category}
+            value={catalog.category}
             onChange={(event) => {
-              const nextFilters = { ...filters, category: event.target.value };
-              setFilters(nextFilters);
-              commitFilters(nextFilters);
+              commitFilters({
+                query: catalog.query,
+                category: event.target.value,
+                sort: catalog.sort,
+                page: 1,
+              });
             }}
-            className="w-full bg-transparent outline-none"
+            className="field-select w-full bg-transparent outline-none"
           >
             {categories.map((category) => (
               <option key={category} value={category} className="bg-iron-900">
@@ -184,44 +132,49 @@ export default function MarketplaceCatalogClient({
           </select>
         </label>
 
-        <label className="flex items-center gap-3 border-2 border-iron-700 bg-iron-900 px-4 py-3 font-serif text-parchment-200">
+        <label className="flex min-h-12 items-center gap-3 rounded-[1rem] border border-iron-700 bg-iron-900 px-4 py-3 font-serif text-parchment-100">
           <Package className="h-4 w-4 text-gold-500" />
           <select
-            value={filters.sort}
+            value={catalog.sort}
             onChange={(event) => {
-              const nextFilters = {
-                ...filters,
+              commitFilters({
+                query: catalog.query,
+                category: catalog.category,
                 sort: event.target.value as MarketplaceFilters["sort"],
-              };
-              setFilters(nextFilters);
-              commitFilters(nextFilters);
+                page: 1,
+              });
             }}
-            className="w-full bg-transparent outline-none"
+            className="field-select w-full bg-transparent outline-none"
           >
             <option value="newest" className="bg-iron-900">Newest First</option>
             <option value="price-asc" className="bg-iron-900">Lowest Price</option>
             <option value="price-desc" className="bg-iron-900">Highest Price</option>
           </select>
         </label>
-      </div>
-
-      {hasActiveFilters ? (
-        <div className="mb-8 flex justify-end">
-          <button
-            type="button"
-            onClick={() => {
-              const nextFilters = { query: "", category: "All", sort: "newest" } satisfies MarketplaceFilters;
-              setFilters(nextFilters);
-              commitFilters(nextFilters);
-            }}
-            className="border border-iron-700 bg-iron-800 px-4 py-2 font-serif text-sm tracking-wider text-parchment-200 transition hover:border-gold-600 hover:bg-iron-700"
-          >
-            Clear Filters
-          </button>
+          <div className="flex items-center justify-between gap-3 lg:justify-end">
+            <div className="text-xs uppercase tracking-[0.25em] text-parchment-400">
+              {hasActiveFilters ? "Filtered Results" : "All Bazaar Wares"}
+            </div>
+            {hasActiveFilters ? (
+              <button
+                type="button"
+                onClick={() => {
+                  commitFilters({
+                    query: "",
+                    category: "All",
+                    sort: "newest",
+                    page: 1,
+                  });
+                }}
+                className="min-h-11 rounded-full border border-iron-700 bg-iron-800 px-4 py-2 font-serif text-sm tracking-[0.16em] text-parchment-200 transition hover:border-gold-600 hover:bg-iron-700"
+              >
+                Clear Filters
+              </button>
+            ) : null}
+          </div>
         </div>
-      ) : null}
 
-      {products.length === 0 ? (
+        {catalog.totalCount === 0 ? (
         <StatePanel
           tone="empty"
           title="No wares have been entered"
@@ -229,72 +182,110 @@ export default function MarketplaceCatalogClient({
           icon={<Package className="h-10 w-10 text-gold-500" />}
           actions={isArtisan ? <ThemedLinkButton href="/marketplace/new">Forge the First Item</ThemedLinkButton> : undefined}
         />
-      ) : filteredProducts.length === 0 ? (
+        ) : catalog.products.length === 0 ? (
         <StatePanel
           tone="empty"
           title="No wares match your search"
           description="Broaden your search terms or change the category and sorting controls to inspect more of the bazaar."
           icon={<Search className="h-10 w-10 text-gold-500" />}
         />
-      ) : (
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3">
-          {filteredProducts.map((product) => (
-            <ParchmentCard key={product.id} className="flex flex-col p-6">
-              <div className="mb-4 flex h-56 items-center justify-center overflow-hidden border-2 border-leather-800 bg-iron-900/10">
-                {product.imageUrl ? (
-                  <Image
-                    src={product.imageUrl}
-                    alt={product.title}
-                    width={480}
-                    height={320}
-                    className="h-full w-full object-cover"
-                    unoptimized
-                  />
-                ) : (
-                  <Package className="h-16 w-16 text-leather-700 opacity-50" />
-                )}
-              </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+            {catalog.products.map((product) => (
+                <ParchmentCard key={product.id} variant="elevated" className="flex flex-col p-6">
+                  <div className="mb-5 flex h-56 items-center justify-center overflow-hidden rounded-[1rem] border-2 border-leather-800 bg-iron-900/10">
+                  {product.imageUrl ? (
+                    <RemoteImage
+                      src={product.imageUrl}
+                      alt={product.title}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <Package className="h-16 w-16 text-leather-700 opacity-50" />
+                  )}
+                </div>
 
-              <div className="mb-4 flex items-center justify-between gap-3">
-                <span className="text-xs font-bold uppercase tracking-[0.25em] text-leather-700">
-                  {product.category}
-                </span>
-                <span className="border border-gold-600/70 bg-gold-500/10 px-3 py-1 text-xs uppercase tracking-[0.2em] text-leather-900">
-                  Stock {product.stock}
-                </span>
-              </div>
-
-              <h2 className="font-serif text-2xl font-bold text-ink-900">{product.title}</h2>
-              <div className="mt-2 flex items-center gap-2 text-sm italic text-leather-800">
-                <UserCircle2 className="h-4 w-4 text-gold-600" />
-                Crafted by {product.crafterName}
-              </div>
-
-              <p className="mt-4 flex-1 border-t border-dashed border-leather-700/50 pt-4 text-sm leading-relaxed text-ink-900">
-                {product.description}
-              </p>
-
-              <div className="mt-6 flex items-center justify-between border-t-2 border-leather-800 pt-4">
-                <span className="font-serif text-xl font-bold text-ink-900">
-                  {product.price} {product.currency}
-                </span>
-                {product.isOwner ? (
-                  <Link
-                    href={`/marketplace/${product.id}/edit`}
-                    className="border border-gold-600 bg-leather-800 px-4 py-2 font-serif text-sm tracking-wider text-parchment-200 transition hover:bg-leather-700"
-                  >
-                    Manage Listing
-                  </Link>
-                ) : (
-                  <span className="text-xs uppercase tracking-[0.2em] text-leather-700">
-                    Open Listing
+                  <div className="mb-4 flex items-center justify-between gap-3">
+                  <span className="text-xs font-bold uppercase tracking-[0.25em] text-leather-700">
+                    {product.category}
                   </span>
-                )}
-              </div>
-            </ParchmentCard>
-          ))}
-        </div>
+                    <span className="rounded-full border border-gold-600/70 bg-gold-500/10 px-3 py-1 text-xs uppercase tracking-[0.2em] text-leather-900">
+                    Stock {product.stock}
+                  </span>
+                </div>
+
+                <h2 className="font-serif text-2xl font-bold text-ink-900">{product.title}</h2>
+                <div className="mt-2 flex items-center gap-2 text-sm italic text-leather-800">
+                  <UserCircle2 className="h-4 w-4 text-gold-600" />
+                  Crafted by {product.crafterName}
+                </div>
+
+                <p className="mt-4 flex-1 border-t border-dashed border-leather-700/50 pt-4 text-sm leading-relaxed text-ink-900">
+                  {product.description}
+                </p>
+
+                  <div className="mt-6 flex items-center justify-between border-t-2 border-leather-800 pt-4">
+                  <span className="font-serif text-xl font-bold text-ink-900">
+                    {product.price} {product.currency}
+                  </span>
+                  {product.isOwner ? (
+                    <Link
+                      href={`/marketplace/${product.id}/edit`}
+                      className="inline-flex min-h-11 items-center rounded-full border border-gold-600 bg-leather-800 px-4 py-2 font-serif text-sm tracking-[0.16em] text-parchment-200 transition hover:bg-leather-700"
+                    >
+                      Manage Listing
+                    </Link>
+                  ) : (
+                    <span className="text-xs uppercase tracking-[0.2em] text-leather-700">
+                      Open Listing
+                    </span>
+                  )}
+                </div>
+              </ParchmentCard>
+            ))}
+          </div>
+
+            <div className="section-panel mt-2 flex flex-col gap-4 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-leather-800">
+              Page {catalog.page} of {totalPages}
+            </p>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                disabled={catalog.page <= 1}
+                onClick={() =>
+                  commitFilters({
+                    query: catalog.query,
+                    category: catalog.category,
+                    sort: catalog.sort,
+                    page: catalog.page - 1,
+                  })
+                }
+                className="min-h-11 rounded-full border border-leather-800 bg-parchment-100 px-4 py-2 font-serif text-sm tracking-[0.16em] text-leather-900 disabled:opacity-50"
+              >
+                Previous
+              </button>
+              <button
+                type="button"
+                disabled={!catalog.hasNextPage}
+                onClick={() =>
+                  commitFilters({
+                    query: catalog.query,
+                    category: catalog.category,
+                    sort: catalog.sort,
+                    page: catalog.page + 1,
+                  })
+                }
+                className="min-h-11 rounded-full border border-gold-600 bg-leather-800 px-4 py-2 font-serif text-sm tracking-[0.16em] text-parchment-200 disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        </>
       )}
+      </div>
     </div>
   );
 }

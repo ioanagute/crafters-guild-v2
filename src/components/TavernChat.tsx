@@ -1,9 +1,12 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { MessageSquare, Signal, Users } from 'lucide-react';
 import { useLiveAnnouncement } from '@/lib/client/useLiveAnnouncement';
+
+const MAX_CHAT_MESSAGES = 100;
+const MAX_CHAT_MESSAGE_LENGTH = 500;
 
 type Message = {
   id: string;
@@ -26,7 +29,7 @@ export default function TavernChat({ currentUser }: { currentUser: { id: string;
   ]);
   const [input, setInput] = useState('');
   const [connected, setConnected] = useState(false);
-  const supabase = createClient();
+  const [supabase] = useState(() => createClient());
   const channelRef = useRef<TavernChannel | null>(null);
   const messagesViewportRef = useRef<HTMLDivElement>(null);
   const seenMessageIdsRef = useRef<Set<string>>(new Set(["system-1"]));
@@ -57,10 +60,12 @@ export default function TavernChat({ currentUser }: { currentUser: { id: string;
         }
 
         seenMessageIdsRef.current.add(clientId);
-        setMessages((prev) => [
-          ...prev, 
-          { id: clientId, user: payload.payload.user, text: payload.payload.text, clientId }
-        ]);
+        setMessages((prev) =>
+          [
+            ...prev,
+            { id: clientId, user: payload.payload.user, text: payload.payload.text, clientId },
+          ].slice(-MAX_CHAT_MESSAGES),
+        );
       })
       .subscribe((status) => {
         setConnected(status === 'SUBSCRIBED');
@@ -70,24 +75,25 @@ export default function TavernChat({ currentUser }: { currentUser: { id: string;
 
     return () => {
       setConnected(false);
-      supabase.removeChannel(channel);
+      void supabase.removeChannel(channel);
     };
   }, [supabase]);
 
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || !currentUser) return;
+    const normalizedInput = input.trim().slice(0, MAX_CHAT_MESSAGE_LENGTH);
+    if (!normalizedInput || !currentUser) return;
     const clientId = crypto.randomUUID();
 
     const newMsg = {
       id: clientId,
       user: currentUser.name,
-      text: input.trim(),
+      text: normalizedInput,
       clientId,
     };
 
     seenMessageIdsRef.current.add(clientId);
-    setMessages((prev) => [...prev, newMsg]);
+    setMessages((prev) => [...prev, newMsg].slice(-MAX_CHAT_MESSAGES));
     
     channelRef.current?.send({
       type: 'broadcast',
@@ -99,9 +105,9 @@ export default function TavernChat({ currentUser }: { currentUser: { id: string;
   };
 
   return (
-    <div className="flex-1 max-w-sm flex flex-col bg-iron-800/80 border-2 border-iron-700 p-4 h-[600px] md:sticky md:top-24">
+    <div className="surface-dark flex h-[600px] max-w-none flex-1 flex-col rounded-[1.5rem] p-4 md:sticky md:top-28 xl:max-w-sm">
       <div aria-live="polite" className="sr-only">{liveAnnouncement}</div>
-      <div className="mb-4 border-b border-iron-600 pb-2">
+      <div className="mb-4 border-b border-iron-600/70 pb-3">
         <h2 className="flex items-center gap-2 font-serif text-2xl text-gold-400">
           <Users className="w-5 h-5" /> Local Hearth
         </h2>
@@ -114,13 +120,13 @@ export default function TavernChat({ currentUser }: { currentUser: { id: string;
         </div>
       </div>
 
-      <div ref={messagesViewportRef} className="flex-1 overflow-y-auto space-y-4 pr-2 mb-4 scrollbar-thin scrollbar-thumb-iron-600 scrollbar-track-transparent">
+      <div ref={messagesViewportRef} className="scroll-area mb-4 flex-1 space-y-4 overflow-y-auto pr-2">
         {messages.map((m) => (
-          <div key={m.id} className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-            <span className={m.user === 'Innkeeper' ? 'text-leather-600 font-bold mr-2 text-sm italic' : 'text-gold-500 font-bold mr-2 text-sm'}>
+          <div key={m.id} className={`rounded-[1rem] border px-3 py-3 shadow-[0_10px_22px_rgba(0,0,0,0.18)] ${m.user === 'Innkeeper' ? 'border-leather-700/60 bg-leather-800/20' : 'border-iron-700 bg-iron-900/55'}`}>
+            <span className={m.user === 'Innkeeper' ? 'mr-2 text-sm font-bold italic text-leather-600' : 'mr-2 text-sm font-bold text-gold-500'}>
               {m.user}:
             </span>
-            <span className={m.user === 'Innkeeper' ? 'text-leather-600/80 text-sm italic' : 'text-parchment-300 text-sm whitespace-pre-wrap break-words'}>
+            <span className={m.user === 'Innkeeper' ? 'text-sm italic text-leather-600/80' : 'text-sm whitespace-pre-wrap break-words text-parchment-300'}>
               {m.text}
             </span>
           </div>
@@ -133,9 +139,9 @@ export default function TavernChat({ currentUser }: { currentUser: { id: string;
             <input 
               type="text" 
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={(e) => setInput(e.target.value.slice(0, MAX_CHAT_MESSAGE_LENGTH))}
               placeholder="Speak your mind..."
-              className="w-full bg-iron-900 border border-iron-600 px-4 py-3 text-parchment-200 focus:border-gold-500 outline-none pr-10 font-serif"
+              className="min-h-12 w-full rounded-[1rem] border border-iron-600 bg-iron-900 px-4 py-3 pr-10 font-serif text-parchment-200 outline-none focus:border-gold-500"
             />
             <button 
               type="submit" 

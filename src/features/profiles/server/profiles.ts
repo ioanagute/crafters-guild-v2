@@ -1,6 +1,7 @@
 import { ok, fail } from "@/lib/action-result";
 import type { Database } from "@/lib/database.types";
 import { readOptionalString } from "@/lib/forms";
+import { validateHttpsUrl, validateLength, validateUuid } from "@/lib/validation";
 import { createClient } from "@/utils/supabase/server";
 import { requireSessionProfile } from "@/lib/auth";
 import type {
@@ -36,12 +37,47 @@ function mapProfile(row: ProfileRow): Profile {
 }
 
 export function validateProfileInput(formData: FormData) {
+  const username = readOptionalString(formData, "username");
+  const fullName = readOptionalString(formData, "full_name");
+  const bio = readOptionalString(formData, "bio");
+  const avatarUrl = readOptionalString(formData, "avatar_url");
+  const guildId = readOptionalString(formData, "guild_id");
+  const fieldErrors: Record<string, string> = {};
+
+  if (username) {
+    if (!validateLength(username, { min: 3, max: 32 })) {
+      fieldErrors.username = "Username must be between 3 and 32 characters.";
+    } else if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+      fieldErrors.username = "Username may only use letters, numbers, and underscores.";
+    }
+  }
+
+  if (fullName && !validateLength(fullName, { max: 80 })) {
+    fieldErrors.full_name = "Full title must be 80 characters or fewer.";
+  }
+
+  if (bio && !validateLength(bio, { max: 500 })) {
+    fieldErrors.bio = "Biography must be 500 characters or fewer.";
+  }
+
+  if (!validateHttpsUrl(avatarUrl)) {
+    fieldErrors.avatar_url = "Avatar URL must be a valid HTTPS address.";
+  }
+
+  if (!validateUuid(guildId)) {
+    fieldErrors.guild_id = "Select a valid guild.";
+  }
+
+  if (Object.keys(fieldErrors).length > 0) {
+    return fail<UpdateProfileInput>("Invalid heraldry input.", fieldErrors);
+  }
+
   return ok<UpdateProfileInput>({
-    username: readOptionalString(formData, "username"),
-    fullName: readOptionalString(formData, "full_name"),
-    bio: readOptionalString(formData, "bio"),
-    avatarUrl: readOptionalString(formData, "avatar_url"),
-    guildId: readOptionalString(formData, "guild_id"),
+    username,
+    fullName,
+    bio,
+    avatarUrl,
+    guildId,
   });
 }
 

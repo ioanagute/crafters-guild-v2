@@ -77,9 +77,9 @@ export default function TavernBoardClient({
   }, [filter, posts]);
 
   return (
-    <div className="bg-parchment flex-1 rounded-sm border-4 border-iron-800 p-8 shadow-[inset_0_0_60px_rgba(0,0,0,0.1)]">
+    <div className="bg-parchment flex-1 rounded-[1.5rem] border-[1.5px] border-iron-900/90 p-6 shadow-[inset_0_0_60px_rgba(0,0,0,0.1),0_18px_40px_rgba(0,0,0,0.22)] md:p-8">
       {isAuthenticated ? (
-        <div className="mb-8 border-b-4 border-double border-leather-800 pb-8">
+        <div className="mb-8 rounded-[1.1rem] border border-leather-800/25 bg-parchment-100/55 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.4)]">
           <form ref={createFormRef} action={createFormAction} className="flex flex-col gap-3">
             <FormStatusBanner status="error" message={createState.status === "error" ? createState.message : undefined} />
             <FormStatusBanner status="success" message={createState.status === "success" ? createState.message : undefined} />
@@ -91,7 +91,7 @@ export default function TavernBoardClient({
               aria-invalid={Boolean(createState.fieldErrors?.content)}
               aria-describedby={createState.fieldErrors?.content ? "notice-content-error" : undefined}
               placeholder="Nail a notice to the board..."
-              className="w-full resize-none border-2 border-leather-700 bg-parchment-100 p-4 font-serif text-ink-900 outline-none focus:border-gold-600"
+              className="field-input min-h-32 resize-none font-serif"
               rows={3}
             />
             <FieldError id="notice-content-error" message={createState.fieldErrors?.content} />
@@ -102,12 +102,12 @@ export default function TavernBoardClient({
                 data-field-name="tier_required"
                 aria-invalid={Boolean(createState.fieldErrors?.tier_required)}
                 aria-describedby={createState.fieldErrors?.tier_required ? "tier-required-error" : undefined}
-                className="border-2 border-leather-700 bg-parchment-100 px-3 py-2 font-serif text-xs uppercase tracking-widest text-ink-900 outline-none"
+                className="field-input field-select max-w-xs font-serif text-xs uppercase tracking-widest"
               >
                 <option value="Public">Public Notice</option>
-                <option value="Copper">Copper Tier+</option>
-                <option value="Iron">Iron Tier+</option>
-                <option value="Gold">Gold Tier Exclusive</option>
+                <option value="Copper">Members Only: Copper</option>
+                <option value="Iron">Members Only: Iron</option>
+                <option value="Gold">Members Only: Gold</option>
               </select>
               <FieldError id="tier-required-error" message={createState.fieldErrors?.tier_required} />
               <PendingButton
@@ -115,27 +115,28 @@ export default function TavernBoardClient({
                 idleLabel="Post Notice"
                 pendingLabel="Posting..."
                 icon={<Send className="h-4 w-4" />}
-                className="inline-flex items-center justify-center gap-2 border border-gold-600 bg-leather-800 px-6 py-2 font-serif text-parchment-200 transition hover:bg-leather-700 disabled:opacity-70"
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[1rem] border border-gold-600 bg-leather-800 px-6 py-2 font-serif tracking-[0.16em] text-parchment-200 transition hover:bg-leather-700 disabled:opacity-70"
               />
             </div>
           </form>
         </div>
       ) : (
-        <div className="mb-8 border-b-4 border-double border-leather-800 pb-8">
+        <div className="mb-8">
           <StatePanel
             tone="info"
             title="Read freely, post only once entered"
             description="Anonymous travelers may inspect the notices, but only registered members may pin fresh dispatches to the board."
             icon={<ShieldAlert className="h-10 w-10 text-gold-500" />}
+            align="left"
           />
         </div>
       )}
 
-      <div className="mb-8 flex flex-wrap gap-3 border-b-2 border-dashed border-leather-800 pb-6">
+      <div className="mb-8 flex flex-wrap gap-3 border-b-2 border-dashed border-leather-800/70 pb-6">
         {[
           ["all", "All Notices"],
           ["public", "Public Only"],
-          ["exclusive", "Exclusive"],
+            ["exclusive", "Members Only"],
           ["mine", "My Notices"],
         ].map(([value, label]) => (
           <button
@@ -144,7 +145,7 @@ export default function TavernBoardClient({
             onClick={() => setFilter(value as TavernFilter)}
             disabled={value === "mine" && !isAuthenticated}
             aria-pressed={filter === value}
-            className={`border px-4 py-2 font-serif text-sm tracking-wider transition ${
+            className={`min-h-11 rounded-full border px-4 py-2 font-serif text-sm tracking-[0.16em] transition ${
               filter === value
                 ? "border-gold-600 bg-leather-800 text-gold-300"
                 : "border-leather-800 bg-parchment-100 text-leather-900"
@@ -169,7 +170,7 @@ export default function TavernBoardClient({
               key={post.id}
               id={`notice-${post.id}`}
               tabIndex={-1}
-              className="border-b-2 border-dashed border-leather-800 pb-6 last:border-b-0"
+              className="rounded-[1rem] border border-leather-800/20 bg-parchment-100/45 px-5 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]"
             >
               <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                 <div>
@@ -183,8 +184,8 @@ export default function TavernBoardClient({
                     </span>
                   </div>
                   {post.tierRequired !== "Public" ? (
-                    <div className="mt-3 inline-block border border-gold-600 bg-gold-500/20 px-3 py-1 text-xs font-bold uppercase tracking-widest text-leather-900">
-                      {post.tierRequired} Tier Exclusive
+                    <div className="mt-3 inline-block rounded-full border border-gold-600 bg-gold-500/20 px-3 py-1 text-xs font-bold uppercase tracking-widest text-leather-900">
+                      Members Only: {post.tierRequired}
                     </div>
                   ) : null}
                 </div>
@@ -207,7 +208,7 @@ export default function TavernBoardClient({
                       <button
                         type="button"
                         onClick={() => setEditingId(post.id)}
-                        className="inline-flex items-center gap-2 border border-gold-600 bg-parchment-100 px-4 py-2 font-serif text-sm tracking-wider text-leather-900"
+                        className="inline-flex min-h-11 items-center gap-2 rounded-full border border-gold-600 bg-parchment-100 px-4 py-2 font-serif text-sm tracking-[0.16em] text-leather-900"
                       >
                         <Edit3 className="h-4 w-4" />
                         Edit
@@ -263,7 +264,7 @@ function EditablePostForm({
         data-field-name="content"
         aria-invalid={Boolean(state.fieldErrors?.content)}
         aria-describedby={state.fieldErrors?.content ? `edit-${post.id}-content-error` : undefined}
-        className="w-full resize-none border-2 border-leather-700 bg-parchment-100 p-4 font-serif text-ink-900 outline-none focus:border-gold-600"
+        className="field-input min-h-36 resize-none font-serif"
       />
       <FieldError id={`edit-${post.id}-content-error`} message={state.fieldErrors?.content} />
       <div className="flex flex-wrap gap-3">
@@ -273,12 +274,12 @@ function EditablePostForm({
           data-field-name="tier_required"
           aria-invalid={Boolean(state.fieldErrors?.tier_required)}
           aria-describedby={state.fieldErrors?.tier_required ? `edit-${post.id}-tier-error` : undefined}
-          className="border-2 border-leather-700 bg-parchment-100 px-3 py-2 font-serif text-xs uppercase tracking-widest text-ink-900 outline-none"
+          className="field-input field-select max-w-xs font-serif text-xs uppercase tracking-widest"
         >
           <option value="Public">Public Notice</option>
-          <option value="Copper">Copper Tier+</option>
-          <option value="Iron">Iron Tier+</option>
-          <option value="Gold">Gold Tier Exclusive</option>
+          <option value="Copper">Members Only: Copper</option>
+          <option value="Iron">Members Only: Iron</option>
+          <option value="Gold">Members Only: Gold</option>
         </select>
         <FieldError id={`edit-${post.id}-tier-error`} message={state.fieldErrors?.tier_required} />
         <PendingButton
@@ -286,12 +287,12 @@ function EditablePostForm({
           idleLabel="Save Notice"
           pendingLabel="Saving..."
           icon={<Save className="h-4 w-4" />}
-          className="inline-flex items-center gap-2 border border-gold-600 bg-leather-800 px-5 py-2 font-serif tracking-wider text-parchment-200 transition hover:bg-leather-700 disabled:opacity-70"
+          className="inline-flex min-h-11 items-center gap-2 rounded-full border border-gold-600 bg-leather-800 px-5 py-2 font-serif tracking-[0.16em] text-parchment-200 transition hover:bg-leather-700 disabled:opacity-70"
         />
         <button
           type="button"
           onClick={onCancel}
-          className="border border-leather-800 bg-parchment-100 px-5 py-2 font-serif tracking-wider text-leather-900"
+          className="min-h-11 rounded-full border border-leather-800 bg-parchment-100 px-5 py-2 font-serif tracking-[0.16em] text-leather-900"
         >
           Cancel
         </button>
@@ -325,7 +326,7 @@ function DeleteNoticeForm({
         idleLabel="Remove"
         pendingLabel="Removing..."
         icon={<Trash2 className="h-4 w-4" />}
-        className="inline-flex items-center gap-2 border border-blood-600 bg-blood-600/10 px-4 py-2 font-serif text-sm tracking-wider text-blood-600 transition hover:bg-blood-600 hover:text-parchment-200 disabled:opacity-70"
+        className="inline-flex min-h-11 items-center gap-2 rounded-full border border-blood-600 bg-blood-600/10 px-4 py-2 font-serif text-sm tracking-[0.16em] text-blood-600 transition hover:bg-blood-600 hover:text-parchment-200 disabled:opacity-70"
       />
     </form>
   );

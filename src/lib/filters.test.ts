@@ -19,6 +19,7 @@ describe("filters helpers", () => {
       query: "cloak",
       category: "Apparel",
       sort: "price-asc",
+      page: 1,
     });
 
     expect(
@@ -32,6 +33,22 @@ describe("filters helpers", () => {
       query: "",
       category: "All",
       sort: "newest",
+      page: 1,
+    });
+
+    expect(
+      sanitizeMarketplaceFilters({
+        query: null,
+        category: "All",
+        sort: "newest",
+        page: "3",
+        validCategories: ["All", "Apparel", "Tool"],
+      }),
+    ).toEqual({
+      query: "",
+      category: "All",
+      sort: "newest",
+      page: 3,
     });
   });
 

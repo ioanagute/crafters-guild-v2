@@ -1,6 +1,8 @@
 import { fail, ok } from "@/lib/action-result";
 import type { Database } from "@/lib/database.types";
 import { readNumber, readOptionalString, readString } from "@/lib/forms";
+import { type MarketplaceSort } from "@/lib/filters";
+import { validateHttpsUrl, validateLength, validateNumberRange } from "@/lib/validation";
 import { createClient } from "@/utils/supabase/server";
 import { requireArtisanProfile } from "@/lib/auth";
 import {
@@ -43,10 +45,23 @@ export function validateProductInput(formData: FormData) {
   const fieldErrors: Record<string, string> = {};
 
   if (!title) fieldErrors.title = "Title is required.";
+  if (title && !validateLength(title, { max: 120 })) {
+    fieldErrors.title = "Title must be 120 characters or fewer.";
+  }
   if (!description) fieldErrors.description = "Description is required.";
+  if (description && !validateLength(description, { max: 2000 })) {
+    fieldErrors.description = "Description must be 2000 characters or fewer.";
+  }
   if (!isMarketplaceCategory(rawCategory)) fieldErrors.category = "Select a valid category.";
-  if (!Number.isFinite(price) || price <= 0) fieldErrors.price = "Price must be greater than zero.";
-  if (!Number.isInteger(stock) || stock < 0) fieldErrors.stock = "Stock must be zero or greater.";
+  if (!validateNumberRange(price, { min: 0.01, max: 999999.99 })) {
+    fieldErrors.price = "Price must be between 0.01 and 999999.99.";
+  }
+  if (!validateNumberRange(stock, { min: 0, max: 999999, integer: true })) {
+    fieldErrors.stock = "Stock must be a whole number between 0 and 999999.";
+  }
+  if (!validateHttpsUrl(imageUrl)) {
+    fieldErrors.image_url = "Image URL must be a valid HTTPS address.";
+  }
 
   if (Object.keys(fieldErrors).length > 0) {
     return fail<CreateProductInput>("Invalid marketplace input.", fieldErrors);
@@ -62,11 +77,41 @@ export function validateProductInput(formData: FormData) {
   });
 }
 
-export async function listMarketplaceProducts(viewerId?: string | null) {
+type MarketplaceQueryArgs = {
+  viewerId?: string | null;
+  query?: string;
+  category?: string;
+  sort?: MarketplaceSort;
+  page?: number;
+  pageSize?: number;
+};
+
+type MarketplaceQueryResult = {
+  products: MarketplaceProduct[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  hasNextPage: boolean;
+};
+
+export async function listMarketplaceProducts({
+  viewerId,
+  query = "",
+  category = "All",
+  sort = "newest",
+  page = 1,
+  pageSize = 24,
+}: MarketplaceQueryArgs = {}): Promise<MarketplaceQueryResult> {
   const supabase = await createClient();
-  const { data } = await supabase
+  const safePage = Math.max(1, page);
+  const safePageSize = Math.max(1, Math.min(pageSize, 24));
+  const from = (safePage - 1) * safePageSize;
+  const to = from + safePageSize - 1;
+  let countQuery = supabase.from("products").select("id", { count: "exact", head: true });
+  let dataQuery = supabase
     .from("products")
-    .select(`
+    .select(
+      `
       id,
       crafter_id,
       title,
@@ -78,10 +123,36 @@ export async function listMarketplaceProducts(viewerId?: string | null) {
       stock,
       created_at,
       profiles:crafter_id ( username, full_name )
-    `)
-    .order("created_at", { ascending: false });
+    `,
+      { count: "exact" },
+    );
 
-  return ((data as ProductRow[] | null) ?? []).map<MarketplaceProduct>((row) => {
+  if (category !== "All" && isMarketplaceCategory(category)) {
+    countQuery = countQuery.eq("category", category);
+    dataQuery = dataQuery.eq("category", category);
+  }
+
+  const normalizedQuery = query.trim();
+  if (normalizedQuery) {
+    const escapedQuery = normalizedQuery.replace(/[%_]/g, (match) => `\\${match}`);
+    const ilike = `%${escapedQuery}%`;
+    countQuery = countQuery.or(`title.ilike.${ilike},description.ilike.${ilike}`);
+    dataQuery = dataQuery.or(`title.ilike.${ilike},description.ilike.${ilike}`);
+  }
+
+  if (sort === "price-asc") {
+    dataQuery = dataQuery.order("price", { ascending: true });
+  } else if (sort === "price-desc") {
+    dataQuery = dataQuery.order("price", { ascending: false });
+  } else {
+    dataQuery = dataQuery.order("created_at", { ascending: false });
+  }
+
+  const [{ count }, { data }] = await Promise.all([
+    countQuery,
+    dataQuery.range(from, to),
+  ]);
+  const products = ((data as ProductRow[] | null) ?? []).map<MarketplaceProduct>((row) => {
     const crafter = getCrafterProfile(row.profiles);
 
     return {
@@ -99,6 +170,14 @@ export async function listMarketplaceProducts(viewerId?: string | null) {
       createdAt: row.created_at,
     };
   });
+
+  return {
+    products,
+    totalCount: count ?? 0,
+    page: safePage,
+    pageSize: safePageSize,
+    hasNextPage: from + products.length < (count ?? 0),
+  };
 }
 
 export async function listCurrentArtisanListings(crafterId: string) {

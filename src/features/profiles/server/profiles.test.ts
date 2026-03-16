@@ -23,4 +23,24 @@ describe("validateProfileInput", () => {
       });
     }
   });
+
+  it("rejects invalid profile URLs, UUIDs, and oversized bios", () => {
+    const formData = new FormData();
+    formData.set("username", "bad name");
+    formData.set("bio", "x".repeat(501));
+    formData.set("avatar_url", "http://example.com/avatar.png");
+    formData.set("guild_id", "not-a-uuid");
+
+    const result = validateProfileInput(formData);
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.fieldErrors).toMatchObject({
+        username: "Username may only use letters, numbers, and underscores.",
+        bio: "Biography must be 500 characters or fewer.",
+        avatar_url: "Avatar URL must be a valid HTTPS address.",
+        guild_id: "Select a valid guild.",
+      });
+    }
+  });
 });

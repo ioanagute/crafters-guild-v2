@@ -12,15 +12,16 @@ export default async function Tavern() {
   const { posts, isAuthenticated, chatUser } = await getTavernPageData();
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-12">
+    <div className="page-shell">
+      <div className="page-stack">
       <PageHeader
         eyebrow="Community Hall"
         title="The Noticeboard"
         description="Hear ye, hear ye. The noticeboard preserves lasting dispatches, while the Local Hearth handles quick and fleeting exchange."
       />
 
-      <div className="flex min-h-[80vh] flex-col gap-8 md:flex-row">
-        <div className="flex-[2]">
+        <div className="grid min-h-[80vh] grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.55fr)_23rem]">
+          <div className="min-w-0">
           <TavernBoardClient
             posts={posts}
             isAuthenticated={isAuthenticated}
@@ -31,6 +32,7 @@ export default async function Tavern() {
         </div>
 
         <TavernChat currentUser={chatUser} />
+      </div>
       </div>
     </div>
   );
