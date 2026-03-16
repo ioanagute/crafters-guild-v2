@@ -1,13 +1,6 @@
+import Image from "next/image";
 import { Shield, UserRound } from "lucide-react";
-
-export type GuildMember = {
-  id: string;
-  username: string | null;
-  full_name: string | null;
-  role: string | null;
-  avatar_url: string | null;
-  bio: string | null;
-};
+import type { GuildMember } from "@/features/guilds/types";
 
 export default function GuildMemberList({
   members,
@@ -29,7 +22,7 @@ export default function GuildMemberList({
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
       {members.map((member) => {
-        const displayName = member.username || member.full_name || "Unknown Wanderer";
+        const displayName = member.username || member.fullName || "Unknown Wanderer";
         const role = member.role || "patron";
         const bio = member.bio?.trim();
 
@@ -40,11 +33,14 @@ export default function GuildMemberList({
           >
             <div className="mb-4 flex items-start gap-4 border-b border-dashed border-leather-800/50 pb-4">
               <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden border-2 border-gold-600 bg-iron-900/10">
-                {member.avatar_url ? (
-                  <img
-                    src={member.avatar_url}
+                {member.avatarUrl ? (
+                  <Image
+                    src={member.avatarUrl}
                     alt={`${displayName} crest`}
+                    width={96}
+                    height={96}
                     className="h-full w-full object-cover"
+                    unoptimized
                   />
                 ) : (
                   <UserRound className="h-7 w-7 text-leather-700 opacity-60" />
@@ -52,8 +48,8 @@ export default function GuildMemberList({
               </div>
               <div className="min-w-0">
                 <h3 className="font-serif text-2xl text-ink-900">{displayName}</h3>
-                {member.full_name && member.username && member.full_name !== member.username && (
-                  <p className="text-sm italic text-leather-700">{member.full_name}</p>
+                {member.fullName && member.username && member.fullName !== member.username && (
+                  <p className="text-sm italic text-leather-700">{member.fullName}</p>
                 )}
                 <p className="mt-2 inline-block border border-gold-600/60 bg-gold-500/10 px-3 py-1 text-xs uppercase tracking-[0.25em] text-leather-900">
                   {role}

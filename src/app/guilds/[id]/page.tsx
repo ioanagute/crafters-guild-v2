@@ -1,31 +1,10 @@
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Crown, ScrollText, ShieldCheck, Users } from "lucide-react";
-import GuildMemberList, { type GuildMember } from "@/components/GuildMemberList";
+import { Crown, ShieldCheck, Users } from "lucide-react";
+import GuildMemberList from "@/components/GuildMemberList";
 import GuildMembershipCallout from "@/components/GuildMembershipCallout";
-import { createClient } from "@/utils/supabase/server";
-
-type GuildDetail = {
-  id: string;
-  name: string;
-  description: string | null;
-  emblem_url: string | null;
-  created_at: string;
-};
-
-type UserProfile = {
-  id: string;
-  guild_id: string | null;
-  username: string | null;
-  guilds?: { id: string; name: string } | { id: string; name: string }[] | null;
-};
-
-function getRelatedGuild(
-  guilds: UserProfile["guilds"],
-): { id: string; name: string } | null {
-  if (!guilds) return null;
-  return Array.isArray(guilds) ? guilds[0] || null : guilds;
-}
+import { getGuildDetailData } from "@/features/guilds/server/guilds";
 
 export default async function GuildDetailPage({
   params,
@@ -33,67 +12,12 @@ export default async function GuildDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const supabase = await createClient();
+  const detail = await getGuildDetailData(id);
 
-  const { data: guild, error: guildError } = await supabase
-    .from("guilds")
-    .select("id, name, description, emblem_url, created_at")
-    .eq("id", id)
-    .maybeSingle();
-
-  if (guildError || !guild) {
+  if (!detail) {
     notFound();
   }
-
-  const { data: members, error: membersError } = await supabase
-    .from("profiles")
-    .select("id, username, full_name, role, avatar_url, bio")
-    .eq("guild_id", id)
-    .order("username", { ascending: true });
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  let userProfile: UserProfile | null = null;
-
-  if (user) {
-    const { data } = await supabase
-      .from("profiles")
-      .select(`
-        id,
-        guild_id,
-        username,
-        guilds:guild_id (
-          id,
-          name
-        )
-      `)
-      .eq("id", user.id)
-      .single();
-
-    userProfile = data as UserProfile | null;
-  }
-
-  const resolvedGuild = getRelatedGuild(userProfile?.guilds);
-
-  const membershipState = !user
-    ? { kind: "anonymous" as const }
-    : userProfile?.guild_id && resolvedGuild
-      ? {
-          kind: "member" as const,
-          username: userProfile.username,
-          guildId: resolvedGuild.id,
-          guildName: resolvedGuild.name,
-          isCurrentGuild: userProfile.guild_id === id,
-        }
-      : {
-          kind: "unaffiliated" as const,
-          username: userProfile?.username,
-        };
-
-  const guildMembers = (members as GuildMember[] | null) || [];
-  const guildDetail = guild as GuildDetail;
+  const { guild: guildDetail, members: guildMembers, membershipState } = detail;
 
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-12">
@@ -110,11 +34,14 @@ export default async function GuildDetailPage({
         <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-start gap-6">
             <div className="flex h-28 w-28 shrink-0 items-center justify-center overflow-hidden border-4 border-leather-800 bg-iron-900/10">
-              {guildDetail.emblem_url ? (
-                <img
-                  src={guildDetail.emblem_url}
+              {guildDetail.emblemUrl ? (
+                <Image
+                  src={guildDetail.emblemUrl}
                   alt={`${guildDetail.name} emblem`}
+                  width={224}
+                  height={224}
                   className="h-full w-full object-cover"
+                  unoptimized
                 />
               ) : (
                 <Crown className="h-12 w-12 text-leather-700 opacity-60" />
@@ -165,19 +92,7 @@ export default async function GuildDetailPage({
           </div>
         </div>
 
-        {membersError ? (
-          <div className="border border-blood-600 bg-blood-600/10 p-8 text-center">
-            <ScrollText className="mx-auto mb-4 h-10 w-10 text-blood-600" />
-            <h3 className="mb-2 font-serif text-2xl text-parchment-200">
-              The roster could not be unsealed
-            </h3>
-            <p className="mx-auto max-w-2xl text-sm text-parchment-300">
-              The guild charter is intact, but its member roll is not presently available.
-            </p>
-          </div>
-        ) : (
-          <GuildMemberList members={guildMembers} />
-        )}
+        <GuildMemberList members={guildMembers} />
       </section>
 
       <section className="mt-12 border border-iron-700 bg-iron-800/70 p-6">
@@ -189,11 +104,11 @@ export default async function GuildDetailPage({
             </p>
           </div>
           <Link
-            href={user ? "/profile" : "/login"}
+            href={membershipState.kind === "anonymous" ? "/login" : "/profile"}
             className="inline-flex items-center gap-2 self-start border-2 border-gold-600 bg-leather-800 px-5 py-3 font-serif tracking-wider text-gold-400 transition hover:bg-leather-700 hover:text-gold-300"
           >
             <ShieldCheck className="h-4 w-4" />
-            {user ? "Open Heraldry" : "Enter the Guild"}
+            {membershipState.kind === "anonymous" ? "Enter the Guild" : "Open Heraldry"}
           </Link>
         </div>
       </section>

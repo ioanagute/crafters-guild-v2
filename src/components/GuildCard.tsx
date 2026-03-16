@@ -1,25 +1,22 @@
+import Image from "next/image";
 import Link from "next/link";
 import { Crown, Users } from "lucide-react";
+import type { Guild } from "@/features/guilds/types";
 
-export type GuildListItem = {
-  id: string;
-  name: string;
-  description: string | null;
-  emblem_url: string | null;
-  memberCount: number;
-};
-
-export default function GuildCard({ guild }: { guild: GuildListItem }) {
+export default function GuildCard({ guild }: { guild: Guild }) {
   return (
     <article className="bg-parchment border-4 border-iron-800 p-6 shadow-[0_0_30px_rgba(0,0,0,0.35)] transition-transform hover:-translate-y-1">
       <div className="mb-5 flex items-start justify-between gap-4 border-b-2 border-dashed border-leather-800/40 pb-4">
         <div className="flex min-w-0 items-center gap-4">
           <div className="flex h-20 w-20 items-center justify-center overflow-hidden border-2 border-leather-800 bg-iron-900/10">
-            {guild.emblem_url ? (
-              <img
-                src={guild.emblem_url}
+            {guild.emblemUrl ? (
+              <Image
+                src={guild.emblemUrl}
                 alt={`${guild.name} emblem`}
+                width={160}
+                height={160}
                 className="h-full w-full object-cover"
+                unoptimized
               />
             ) : (
               <Crown className="h-8 w-8 text-leather-700 opacity-60" />

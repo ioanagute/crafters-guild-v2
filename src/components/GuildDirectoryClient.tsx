@@ -2,12 +2,13 @@
 
 import { useMemo, useState } from "react";
 import { Search } from "lucide-react";
-import GuildCard, { type GuildListItem } from "@/components/GuildCard";
+import GuildCard from "@/components/GuildCard";
+import type { Guild } from "@/features/guilds/types";
 
 export default function GuildDirectoryClient({
   guilds,
 }: {
-  guilds: GuildListItem[];
+  guilds: Guild[];
 }) {
   const [query, setQuery] = useState("");
 
