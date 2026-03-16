@@ -77,12 +77,24 @@ npm run dev
 
 ## Cloudflare Deployment
 
-For Cloudflare Workers continuous deployment, configure the project with:
+This repository targets **Cloudflare Workers**, not a Pages-only deployment.
+
+Use:
 
 - Build command: `npm run build`
 - Deploy command: `npm run cf:deploy`
+- Deploy auth: set `CLOUDFLARE_API_TOKEN` for terminal or CI deployments
 
-`npm run build` runs the OpenNext Cloudflare adapter, which generates `.open-next/worker.js` and `.open-next/assets`. Without that step, `wrangler` will fail because the worker entrypoint does not exist.
+For GitHub-based deployments, use the Linux workflow in [`.github/workflows/deploy-worker.yml`](/c:/Users/Stefan/craftersguildv2/crafters-guild-v2/.github/workflows/deploy-worker.yml). It deploys from `ubuntu-latest` on pushes to `qa-test`, which avoids the Windows runtime bundling issue seen with local OpenNext deploys.
+
+`npm run build` runs the OpenNext Cloudflare adapter and generates:
+
+- `.open-next/worker.js`
+- `.open-next/assets`
+
+Without that step, `wrangler` cannot deploy the worker entrypoint.
+
+If you previously created a Cloudflare Pages project for this app, remove any custom-domain bindings from Pages and attach the custom domain to the Worker instead. A Pages setup can return a generic `404 Not Found` even when the Worker build artifacts exist locally.
 
 ## Quality Gates
 
