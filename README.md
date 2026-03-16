@@ -67,7 +67,22 @@ npm run dev
 - `npm run test`
   Run Vitest
 - `npm run build`
-  Run a production build
+  Run the Cloudflare production build and generate `.open-next/worker.js`
+- `npm run build:next`
+  Run a plain Next.js production build without Cloudflare packaging
+- `npm run cf:deploy`
+  Deploy the prebuilt OpenNext worker with Wrangler
+- `npm run cf:preview`
+  Preview the Cloudflare worker locally with Wrangler
+
+## Cloudflare Deployment
+
+For Cloudflare Workers continuous deployment, configure the project with:
+
+- Build command: `npm run build`
+- Deploy command: `npm run cf:deploy`
+
+`npm run build` runs the OpenNext Cloudflare adapter, which generates `.open-next/worker.js` and `.open-next/assets`. Without that step, `wrangler` will fail because the worker entrypoint does not exist.
 
 ## Quality Gates
 
