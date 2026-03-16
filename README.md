@@ -84,6 +84,7 @@ Use:
 - Build command: `npm run build`
 - Deploy command: `npm run cf:deploy`
 - Deploy auth: set `CLOUDFLARE_API_TOKEN` for terminal or CI deployments
+- Multi-account deploys: set `CLOUDFLARE_ACCOUNT_ID` in CI so Wrangler selects the correct Cloudflare account non-interactively
 
 For GitHub-based deployments, use the Linux workflow in [`.github/workflows/deploy-worker.yml`](/c:/Users/Stefan/craftersguildv2/crafters-guild-v2/.github/workflows/deploy-worker.yml). It deploys from `ubuntu-latest` on pushes to `qa-test`, which avoids the Windows runtime bundling issue seen with local OpenNext deploys.
 

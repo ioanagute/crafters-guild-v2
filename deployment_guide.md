@@ -138,6 +138,7 @@ This repository now includes a GitHub Actions workflow at `.github/workflows/dep
 Add these GitHub repository secrets before relying on it:
 
 - `CLOUDFLARE_API_TOKEN`
+- `CLOUDFLARE_ACCOUNT_ID`
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 
