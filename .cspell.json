@@ -13,26 +13,21 @@
     "StatPill",
     "ParchmentCard",
     "ThemedLinkButton",
-    "PageHeader"
+    "PageHeader",
+    "pgcrypto",
+    "plpgsql",
+    "tgname",
+    "schemaname",
+    "Crafters",
+    "Forgemasters",
+    "leatherworking",
+    "runecrafters",
+    "crafters",
+    "Fprofile"
   ],
   "ignorePaths": [
     "node_modules",
     ".next",
     "package-lock.json"
-  ],
-  "overrides": [
-    {
-      "filename": "supabase/**/*.sql",
-      "words": [
-        "pgcrypto",
-        "plpgsql",
-        "tgname",
-        "schemaname",
-        "Crafters",
-        "Forgemasters",
-        "leatherworking",
-        "runecrafters"
-      ]
-    }
   ]
 }
