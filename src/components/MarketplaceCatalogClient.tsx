@@ -1,14 +1,16 @@
 'use client';
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Package, Search, SlidersHorizontal, UserCircle2 } from "lucide-react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import PageHeader from "@/components/PageHeader";
 import ParchmentCard from "@/components/ParchmentCard";
 import StatePanel from "@/components/StatePanel";
 import StatPill from "@/components/StatPill";
 import ThemedLinkButton from "@/components/ThemedLinkButton";
+import { buildSearchParams, sanitizeMarketplaceFilters } from "@/lib/filters";
 import {
   MARKETPLACE_CATEGORIES,
   type MarketplaceProduct,
@@ -38,11 +40,69 @@ export default function MarketplaceCatalogClient({
   products: MarketplaceProduct[];
   isArtisan: boolean;
 }) {
-  const [filters, setFilters] = useState<MarketplaceFilters>({
-    query: "",
-    category: "All",
-    sort: "newest",
-  });
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const urlFilters = useMemo(
+    () =>
+      sanitizeMarketplaceFilters({
+        query: searchParams.get("query"),
+        category: searchParams.get("category"),
+        sort: searchParams.get("sort"),
+        validCategories: categories,
+      }),
+    [searchParams],
+  );
+  const [filters, setFilters] = useState<MarketplaceFilters>(() => urlFilters);
+
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      setFilters((current) => {
+        const next = {
+          ...current,
+          category: urlFilters.category,
+          sort: urlFilters.sort,
+        };
+
+        if (current.query === urlFilters.query) {
+          next.query = urlFilters.query;
+        }
+
+        return next.query === current.query &&
+          next.category === current.category &&
+          next.sort === current.sort
+          ? current
+          : next;
+      });
+    }, 0);
+
+    return () => window.clearTimeout(id);
+  }, [urlFilters.category, urlFilters.query, urlFilters.sort]);
+
+  function commitFilters(nextFilters: MarketplaceFilters) {
+    const normalized = sanitizeMarketplaceFilters({
+      query: nextFilters.query,
+      category: nextFilters.category,
+      sort: nextFilters.sort,
+      validCategories: categories,
+    });
+
+    if (
+      normalized.query === urlFilters.query &&
+      normalized.category === urlFilters.category &&
+      normalized.sort === urlFilters.sort
+    ) {
+      return;
+    }
+
+    const next = buildSearchParams({
+      query: normalized.query,
+      category: normalized.category !== "All" ? normalized.category : null,
+      sort: normalized.sort !== "newest" ? normalized.sort : null,
+    });
+    const nextUrl = next.toString() ? `${pathname}?${next.toString()}` : pathname;
+    router.replace(nextUrl, { scroll: false });
+  }
 
   const filteredProducts = useMemo(() => {
     const query = filters.query.trim().toLowerCase();
@@ -57,7 +117,10 @@ export default function MarketplaceCatalogClient({
     });
 
     return sortProducts(matching, filters.sort);
-  }, [filters, products]);
+  }, [filters.query, filters.category, filters.sort, products]);
+
+  const hasActiveFilters =
+    filters.query.trim().length > 0 || filters.category !== "All" || filters.sort !== "newest";
 
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-12">
@@ -84,11 +147,19 @@ export default function MarketplaceCatalogClient({
         <label className="relative block">
           <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-parchment-400" />
           <input
+            aria-label="Search marketplace listings"
             type="text"
             value={filters.query}
             onChange={(event) =>
               setFilters((current) => ({ ...current, query: event.target.value }))
             }
+            onBlur={(event) => commitFilters({ ...filters, query: event.target.value })}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                commitFilters(filters);
+              }
+            }}
             placeholder="Search wares, crafters, or categories..."
             className="w-full border-2 border-iron-700 bg-iron-900 px-11 py-3 font-serif text-parchment-200 outline-none placeholder:text-iron-700 focus:border-gold-500"
           />
@@ -98,9 +169,11 @@ export default function MarketplaceCatalogClient({
           <SlidersHorizontal className="h-4 w-4 text-gold-500" />
           <select
             value={filters.category}
-            onChange={(event) =>
-              setFilters((current) => ({ ...current, category: event.target.value }))
-            }
+            onChange={(event) => {
+              const nextFilters = { ...filters, category: event.target.value };
+              setFilters(nextFilters);
+              commitFilters(nextFilters);
+            }}
             className="w-full bg-transparent outline-none"
           >
             {categories.map((category) => (
@@ -115,12 +188,14 @@ export default function MarketplaceCatalogClient({
           <Package className="h-4 w-4 text-gold-500" />
           <select
             value={filters.sort}
-            onChange={(event) =>
-              setFilters((current) => ({
-                ...current,
+            onChange={(event) => {
+              const nextFilters = {
+                ...filters,
                 sort: event.target.value as MarketplaceFilters["sort"],
-              }))
-            }
+              };
+              setFilters(nextFilters);
+              commitFilters(nextFilters);
+            }}
             className="w-full bg-transparent outline-none"
           >
             <option value="newest" className="bg-iron-900">Newest First</option>
@@ -129,6 +204,22 @@ export default function MarketplaceCatalogClient({
           </select>
         </label>
       </div>
+
+      {hasActiveFilters ? (
+        <div className="mb-8 flex justify-end">
+          <button
+            type="button"
+            onClick={() => {
+              const nextFilters = { query: "", category: "All", sort: "newest" } satisfies MarketplaceFilters;
+              setFilters(nextFilters);
+              commitFilters(nextFilters);
+            }}
+            className="border border-iron-700 bg-iron-800 px-4 py-2 font-serif text-sm tracking-wider text-parchment-200 transition hover:border-gold-600 hover:bg-iron-700"
+          >
+            Clear Filters
+          </button>
+        </div>
+      ) : null}
 
       {products.length === 0 ? (
         <StatePanel

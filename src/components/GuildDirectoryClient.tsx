@@ -2,15 +2,30 @@
 
 import { useMemo, useState } from "react";
 import { Search } from "lucide-react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import GuildCard from "@/components/GuildCard";
 import type { Guild } from "@/features/guilds/types";
+import { buildSearchParams, sanitizeGuildQuery } from "@/lib/filters";
 
 export default function GuildDirectoryClient({
   guilds,
 }: {
   guilds: Guild[];
 }) {
-  const [query, setQuery] = useState("");
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const urlQuery = useMemo(() => sanitizeGuildQuery(searchParams.get("query")), [searchParams]);
+  const [query, setQuery] = useState(() => urlQuery);
+
+  function commitQuery(nextQuery: string) {
+    const normalized = nextQuery.trim();
+    if (normalized === urlQuery) return;
+
+    const next = buildSearchParams({ query: normalized });
+    const nextUrl = next.toString() ? `${pathname}?${next.toString()}` : pathname;
+    router.replace(nextUrl, { scroll: false });
+  }
 
   const filteredGuilds = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -43,11 +58,34 @@ export default function GuildDirectoryClient({
             type="text"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
+            onBlur={(event) => commitQuery(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                commitQuery(query);
+              }
+            }}
             placeholder="Search guilds..."
+            aria-label="Search guilds"
             className="w-full border-2 border-iron-700 bg-iron-900 px-11 py-3 font-serif text-parchment-200 outline-none transition placeholder:text-iron-700 focus:border-gold-500"
           />
         </label>
       </div>
+
+      {query.trim() ? (
+        <div className="-mt-4 flex justify-end">
+          <button
+            type="button"
+            onClick={() => {
+              setQuery("");
+              commitQuery("");
+            }}
+            className="border border-iron-700 bg-iron-800 px-4 py-2 font-serif text-sm tracking-wider text-parchment-200 transition hover:border-gold-600 hover:bg-iron-700"
+          >
+            Clear Search
+          </button>
+        </div>
+      ) : null}
 
       {filteredGuilds.length === 0 ? (
         <div className="border-2 border-dashed border-iron-700 bg-iron-800/60 px-6 py-12 text-center">

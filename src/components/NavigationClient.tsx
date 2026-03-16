@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Menu, Shield, Swords, Scroll, Users, UserCircle, X } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const navItems = [
   { href: "/marketplace", label: "Marketplace", icon: Scroll },
@@ -18,6 +18,41 @@ function isActive(pathname: string, href: string) {
 export default function NavigationClient({ isAuthenticated }: { isAuthenticated: boolean }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const toggleRef = useRef<HTMLButtonElement>(null);
+  const wasOpenRef = useRef(false);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const id = window.setTimeout(() => setOpen(false), 0);
+    return () => window.clearTimeout(id);
+  }, [open, pathname]);
+
+  useEffect(() => {
+    if (!open) {
+      document.body.style.overflow = "";
+      if (wasOpenRef.current) {
+        toggleRef.current?.focus();
+      }
+      wasOpenRef.current = false;
+      return;
+    }
+
+    wasOpenRef.current = true;
+    document.body.style.overflow = "hidden";
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setOpen(false);
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.body.style.overflow = "";
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open]);
 
   return (
     <nav className="sticky top-0 z-50 border-b-4 border-iron-800 bg-iron-900/95 shadow-2xl backdrop-blur">
@@ -38,6 +73,7 @@ export default function NavigationClient({ isAuthenticated }: { isAuthenticated:
               <Link
                 key={item.href}
                 href={item.href}
+                aria-current={active ? "page" : undefined}
                 className={`flex items-center gap-2 transition-colors ${active ? "text-gold-400" : "hover:text-gold-400"}`}
               >
                 <Icon className="h-4 w-4" />
@@ -51,6 +87,7 @@ export default function NavigationClient({ isAuthenticated }: { isAuthenticated:
           {isAuthenticated ? (
             <Link
               href="/profile"
+              aria-current={isActive(pathname, "/profile") ? "page" : undefined}
               className={`inline-flex items-center gap-2 border-2 px-6 py-2 transition-colors ${
                 isActive(pathname, "/profile")
                   ? "border-gold-500 bg-leather-700 text-gold-300"
@@ -63,6 +100,7 @@ export default function NavigationClient({ isAuthenticated }: { isAuthenticated:
           ) : (
             <Link
               href="/login"
+              aria-current={isActive(pathname, "/login") ? "page" : undefined}
               className={`border-2 px-6 py-2 transition-colors ${
                 isActive(pathname, "/login")
                   ? "border-gold-500 bg-leather-700 text-gold-300"
@@ -75,10 +113,12 @@ export default function NavigationClient({ isAuthenticated }: { isAuthenticated:
         </div>
 
         <button
+          ref={toggleRef}
           type="button"
           className="inline-flex h-12 w-12 items-center justify-center border border-iron-700 bg-iron-800 text-parchment-200 md:hidden"
           onClick={() => setOpen((value) => !value)}
           aria-expanded={open}
+          aria-controls="mobile-navigation"
           aria-label="Toggle navigation"
         >
           {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -86,7 +126,7 @@ export default function NavigationClient({ isAuthenticated }: { isAuthenticated:
       </div>
 
       {open ? (
-        <div className="border-t border-iron-700 bg-iron-900 px-4 py-4 md:hidden">
+        <div id="mobile-navigation" className="border-t border-iron-700 bg-iron-900 px-4 py-4 md:hidden">
           <div className="flex flex-col gap-2">
             {navItems.map((item) => {
               const Icon = item.icon;
@@ -96,7 +136,7 @@ export default function NavigationClient({ isAuthenticated }: { isAuthenticated:
                 <Link
                   key={item.href}
                   href={item.href}
-                  onClick={() => setOpen(false)}
+                  aria-current={active ? "page" : undefined}
                   className={`flex items-center gap-3 border px-4 py-3 font-serif tracking-wider transition ${
                     active
                       ? "border-gold-600 bg-leather-800/80 text-gold-400"
@@ -110,7 +150,7 @@ export default function NavigationClient({ isAuthenticated }: { isAuthenticated:
             })}
             <Link
               href={isAuthenticated ? "/profile" : "/login"}
-              onClick={() => setOpen(false)}
+              aria-current={isAuthenticated ? (isActive(pathname, "/profile") ? "page" : undefined) : (isActive(pathname, "/login") ? "page" : undefined)}
               className="mt-2 flex items-center justify-center gap-2 border-2 border-gold-600 bg-leather-800 px-4 py-3 font-serif tracking-wider text-gold-400"
             >
               <UserCircle className="h-4 w-4" />

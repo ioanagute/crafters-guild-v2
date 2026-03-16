@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { Shield, UserRound } from "lucide-react";
+import StatePanel from "@/components/StatePanel";
 import type { GuildMember } from "@/features/guilds/types";
 
 export default function GuildMemberList({
@@ -9,13 +10,12 @@ export default function GuildMemberList({
 }) {
   if (members.length === 0) {
     return (
-      <div className="border-2 border-dashed border-leather-800/60 bg-parchment p-8 text-center text-leather-800">
-        <Shield className="mx-auto mb-4 h-10 w-10 text-gold-600 opacity-80" />
-        <h2 className="mb-2 font-serif text-2xl text-ink-900">No sworn members yet</h2>
-        <p className="text-sm italic">
-          This banner awaits the first artisan or patron to take its oath.
-        </p>
-      </div>
+      <StatePanel
+        tone="empty"
+        title="No sworn members yet"
+        description="This banner awaits the first artisan or patron to take its oath."
+        icon={<Shield className="h-10 w-10 text-gold-600 opacity-80" />}
+      />
     );
   }
 

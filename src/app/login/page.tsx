@@ -1,7 +1,8 @@
-import { login, signup } from './actions'
 import { Crown, ScrollText, Shield, Sparkles } from 'lucide-react'
 import PageHeader from '@/components/PageHeader'
 import ParchmentCard from '@/components/ParchmentCard'
+import LoginFormClient from '@/components/LoginFormClient'
+import { authAction } from './actions'
 
 export default function LoginPage() {
   return (
@@ -44,58 +45,7 @@ export default function LoginPage() {
           <p className="text-leather-700 italic mt-2 text-center text-sm">Sign the register to enter the Guild, view the market, and converse in the Tavern.</p>
         </div>
 
-        <form className="flex flex-col gap-6">
-          <div className="flex flex-col gap-2">
-            <label htmlFor="email" className="font-serif text-ink-900 font-bold uppercase tracking-widest text-xs">Scroll Reference (Email)</label>
-            <input 
-              id="email" 
-              name="email" 
-              type="email" 
-              required 
-              className="px-4 py-3 bg-parchment-100 border-2 border-leather-800 text-ink-900 outline-none focus:border-gold-600 focus:bg-white placeholder:text-leather-700/50 transition-all font-serif"
-              placeholder="artisan@realm.com"
-            />
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <label htmlFor="password" className="font-serif text-ink-900 font-bold uppercase tracking-widest text-xs">Secret Word (Password)</label>
-            <input 
-              id="password" 
-              name="password" 
-              type="password" 
-              required 
-              className="px-4 py-3 bg-parchment-100 border-2 border-leather-800 text-ink-900 outline-none focus:border-gold-600 focus:bg-white placeholder:text-leather-700/50 transition-all font-serif"
-            />
-          </div>
-
-          <div className="flex flex-col gap-2 border-t-2 border-dashed border-leather-700/50 pt-5 mt-2">
-            <label htmlFor="role" className="font-serif text-ink-900 font-bold uppercase tracking-widest text-xs">Path of Registration (New Users Only)</label>
-            <select 
-              id="role" 
-              name="role" 
-              className="px-4 py-3 bg-parchment-100 border-2 border-leather-800 text-ink-900 outline-none focus:border-gold-600 focus:bg-white font-serif"
-            >
-              <option value="patron">Patron (Wanderer & Supporter)</option>
-              <option value="artisan">Artisan (Master Crafter & Seller)</option>
-            </select>
-            <p className="text-xs text-leather-700 italic">Veterans simply &apos;Enter the Guild&apos; below. This choice binds only to new heraldry and determines which paths appear in your member home.</p>
-          </div>
-
-          <div className="flex flex-col gap-3 mt-4">
-            <button 
-              formAction={login} 
-              className="w-full py-3 bg-iron-900 hover:bg-iron-800 text-parchment-200 font-serif border-2 border-iron-800 hover:border-gold-500 transition-all tracking-wider shadow-lg flex items-center justify-center gap-2"
-            >
-              Enter the Guild
-            </button>
-            <button 
-              formAction={signup} 
-              className="w-full py-3 bg-transparent hover:bg-leather-800/10 text-ink-900 font-serif border-2 border-leather-800 transition-all tracking-wider flex items-center justify-center gap-2"
-            >
-              Register New Heraldry
-            </button>
-          </div>
-        </form>
+        <LoginFormClient action={authAction} />
       </ParchmentCard>
     </div>
   )

@@ -3,18 +3,20 @@
 import { useEffect, useState, useRef } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { MessageSquare, Signal, Users } from 'lucide-react';
+import { useLiveAnnouncement } from '@/lib/client/useLiveAnnouncement';
 
 type Message = {
   id: string;
   user: string;
   text: string;
+  clientId?: string;
 };
 
 type TavernChannel = {
   send: (payload: {
     type: 'broadcast';
     event: 'chat_message';
-    payload: { user: string; text: string };
+    payload: { user: string; text: string; clientId: string };
   }) => Promise<unknown>;
 };
 
@@ -26,20 +28,38 @@ export default function TavernChat({ currentUser }: { currentUser: { id: string;
   const [connected, setConnected] = useState(false);
   const supabase = createClient();
   const channelRef = useRef<TavernChannel | null>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesViewportRef = useRef<HTMLDivElement>(null);
+  const seenMessageIdsRef = useRef<Set<string>>(new Set(["system-1"]));
+  const liveAnnouncement = useLiveAnnouncement(
+    connected ? "Local Hearth connected." : "Local Hearth reconnecting.",
+  );
 
   useEffect(() => {
-    // Scroll to bottom when new messages arrive
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const viewport = messagesViewportRef.current;
+    if (!viewport) return;
+
+    const distanceFromBottom =
+      viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight;
+    const shouldStickToBottom = distanceFromBottom < 80;
+
+    if (shouldStickToBottom) {
+      viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'smooth' });
+    }
   }, [messages]);
 
   useEffect(() => {
     // 1. Subscribe to a Supabase "Broadcast" channel (no database required, strictly real-time socket events)
     const channel = supabase.channel('tavern_hearth')
       .on('broadcast', { event: 'chat_message' }, (payload) => {
+        const clientId = payload.payload.clientId as string;
+        if (seenMessageIdsRef.current.has(clientId)) {
+          return;
+        }
+
+        seenMessageIdsRef.current.add(clientId);
         setMessages((prev) => [
           ...prev, 
-          { id: crypto.randomUUID(), user: payload.payload.user, text: payload.payload.text }
+          { id: clientId, user: payload.payload.user, text: payload.payload.text, clientId }
         ]);
       })
       .subscribe((status) => {
@@ -57,16 +77,18 @@ export default function TavernChat({ currentUser }: { currentUser: { id: string;
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || !currentUser) return;
+    const clientId = crypto.randomUUID();
 
     const newMsg = {
+      id: clientId,
       user: currentUser.name,
-      text: input
+      text: input.trim(),
+      clientId,
     };
 
-    // 2. Optimistic UI update (show for ourselves immediately)
-    setMessages((prev) => [...prev, { id: crypto.randomUUID(), ...newMsg }]);
+    seenMessageIdsRef.current.add(clientId);
+    setMessages((prev) => [...prev, newMsg]);
     
-    // 3. Broadcast to all other connected clients
     channelRef.current?.send({
       type: 'broadcast',
       event: 'chat_message',
@@ -78,6 +100,7 @@ export default function TavernChat({ currentUser }: { currentUser: { id: string;
 
   return (
     <div className="flex-1 max-w-sm flex flex-col bg-iron-800/80 border-2 border-iron-700 p-4 h-[600px] md:sticky md:top-24">
+      <div aria-live="polite" className="sr-only">{liveAnnouncement}</div>
       <div className="mb-4 border-b border-iron-600 pb-2">
         <h2 className="flex items-center gap-2 font-serif text-2xl text-gold-400">
           <Users className="w-5 h-5" /> Local Hearth
@@ -91,7 +114,7 @@ export default function TavernChat({ currentUser }: { currentUser: { id: string;
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto space-y-4 pr-2 mb-4 scrollbar-thin scrollbar-thumb-iron-600 scrollbar-track-transparent">
+      <div ref={messagesViewportRef} className="flex-1 overflow-y-auto space-y-4 pr-2 mb-4 scrollbar-thin scrollbar-thumb-iron-600 scrollbar-track-transparent">
         {messages.map((m) => (
           <div key={m.id} className="animate-in fade-in slide-in-from-bottom-2 duration-300">
             <span className={m.user === 'Innkeeper' ? 'text-leather-600 font-bold mr-2 text-sm italic' : 'text-gold-500 font-bold mr-2 text-sm'}>
@@ -102,7 +125,6 @@ export default function TavernChat({ currentUser }: { currentUser: { id: string;
             </span>
           </div>
         ))}
-        <div ref={messagesEndRef} />
       </div>
 
       <div className="mt-auto border-t border-iron-600 pt-4">

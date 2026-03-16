@@ -1,9 +1,14 @@
 'use client';
 
-import { useActionState, useMemo, useState } from "react";
+import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { Edit3, Megaphone, Save, Send, ShieldAlert, Trash2 } from "lucide-react";
-import FormMessage from "@/components/FormMessage";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import FieldError from "@/components/form/FieldError";
+import FormStatusBanner from "@/components/form/FormStatusBanner";
+import PendingButton from "@/components/form/PendingButton";
 import StatePanel from "@/components/StatePanel";
+import { useAutoFocusFirstError } from "@/lib/client/useAutoFocusFirstError";
+import { buildSearchParams, sanitizeTavernFilter, type TavernFilter } from "@/lib/filters";
 import { idleFormState } from "@/lib/form-action-state";
 import type { TavernPost } from "@/features/tavern/types";
 
@@ -34,9 +39,35 @@ export default function TavernBoardClient({
   updatePostAction: (state: import("@/features/tavern/types").TavernFormState, formData: FormData) => Promise<import("@/features/tavern/types").TavernFormState>;
   deletePostAction: (state: import("@/lib/form-action-state").FormActionState, formData: FormData) => Promise<import("@/lib/form-action-state").FormActionState>;
 }) {
-  const [filter, setFilter] = useState<"all" | "public" | "exclusive" | "mine">("all");
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const initialFilter = useMemo(
+    () => sanitizeTavernFilter(searchParams.get("filter"), isAuthenticated),
+    [isAuthenticated, searchParams],
+  );
+  const [filter, setFilter] = useState<TavernFilter>(initialFilter);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [createState, createFormAction, isCreatePending] = useActionState(createPostAction, idleFormState());
+  const createFormRef = useRef<HTMLFormElement>(null);
+
+  useAutoFocusFirstError(createState.fieldErrors, createState.status, createFormRef);
+
+  useEffect(() => {
+    setFilter(initialFilter);
+  }, [initialFilter]);
+
+  useEffect(() => {
+    const next = buildSearchParams({ filter: filter !== "all" ? filter : null });
+    const nextUrl = next.toString() ? `${pathname}?${next.toString()}` : pathname;
+    router.replace(nextUrl, { scroll: false });
+  }, [filter, pathname, router]);
+
+  useEffect(() => {
+    if (createState.status === "success") {
+      createFormRef.current?.reset();
+    }
+  }, [createState.status]);
 
   const filteredPosts = useMemo(() => {
     if (filter === "public") return posts.filter((post) => post.tierRequired === "Public");
@@ -49,26 +80,28 @@ export default function TavernBoardClient({
     <div className="bg-parchment flex-1 rounded-sm border-4 border-iron-800 p-8 shadow-[inset_0_0_60px_rgba(0,0,0,0.1)]">
       {isAuthenticated ? (
         <div className="mb-8 border-b-4 border-double border-leather-800 pb-8">
-          <form action={createFormAction} className="flex flex-col gap-3">
-            {createState.status === "error" && createState.message ? (
-              <FormMessage tone="error">{createState.message}</FormMessage>
-            ) : null}
-            {createState.status === "success" && createState.message ? (
-              <FormMessage tone="success">{createState.message}</FormMessage>
-            ) : null}
+          <form ref={createFormRef} action={createFormAction} className="flex flex-col gap-3">
+            <FormStatusBanner status="error" message={createState.status === "error" ? createState.message : undefined} />
+            <FormStatusBanner status="success" message={createState.status === "success" ? createState.message : undefined} />
             <textarea
+              id="notice-content"
               name="content"
               required
+              data-field-name="content"
+              aria-invalid={Boolean(createState.fieldErrors?.content)}
+              aria-describedby={createState.fieldErrors?.content ? "notice-content-error" : undefined}
               placeholder="Nail a notice to the board..."
               className="w-full resize-none border-2 border-leather-700 bg-parchment-100 p-4 font-serif text-ink-900 outline-none focus:border-gold-600"
               rows={3}
             />
-            {createState.fieldErrors?.content ? (
-              <p className="text-sm text-blood-700">{createState.fieldErrors.content}</p>
-            ) : null}
+            <FieldError id="notice-content-error" message={createState.fieldErrors?.content} />
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <select
+                id="tier_required"
                 name="tier_required"
+                data-field-name="tier_required"
+                aria-invalid={Boolean(createState.fieldErrors?.tier_required)}
+                aria-describedby={createState.fieldErrors?.tier_required ? "tier-required-error" : undefined}
                 className="border-2 border-leather-700 bg-parchment-100 px-3 py-2 font-serif text-xs uppercase tracking-widest text-ink-900 outline-none"
               >
                 <option value="Public">Public Notice</option>
@@ -76,14 +109,14 @@ export default function TavernBoardClient({
                 <option value="Iron">Iron Tier+</option>
                 <option value="Gold">Gold Tier Exclusive</option>
               </select>
-              <button
-                type="submit"
-                disabled={isCreatePending}
-                className="inline-flex items-center justify-center gap-2 border border-gold-600 bg-leather-800 px-6 py-2 font-serif text-parchment-200 transition hover:bg-leather-700"
-              >
-                <Send className="h-4 w-4" />
-                {isCreatePending ? "Posting..." : "Post Notice"}
-              </button>
+              <FieldError id="tier-required-error" message={createState.fieldErrors?.tier_required} />
+              <PendingButton
+                pending={isCreatePending}
+                idleLabel="Post Notice"
+                pendingLabel="Posting..."
+                icon={<Send className="h-4 w-4" />}
+                className="inline-flex items-center justify-center gap-2 border border-gold-600 bg-leather-800 px-6 py-2 font-serif text-parchment-200 transition hover:bg-leather-700 disabled:opacity-70"
+              />
             </div>
           </form>
         </div>
@@ -108,8 +141,9 @@ export default function TavernBoardClient({
           <button
             key={value}
             type="button"
-            onClick={() => setFilter(value as "all" | "public" | "exclusive" | "mine")}
+            onClick={() => setFilter(value as TavernFilter)}
             disabled={value === "mine" && !isAuthenticated}
+            aria-pressed={filter === value}
             className={`border px-4 py-2 font-serif text-sm tracking-wider transition ${
               filter === value
                 ? "border-gold-600 bg-leather-800 text-gold-300"
@@ -131,7 +165,12 @@ export default function TavernBoardClient({
           />
         ) : (
           filteredPosts.map((post) => (
-            <article key={post.id} className="border-b-2 border-dashed border-leather-800 pb-6 last:border-b-0">
+            <article
+              key={post.id}
+              id={`notice-${post.id}`}
+              tabIndex={-1}
+              className="border-b-2 border-dashed border-leather-800 pb-6 last:border-b-0"
+            >
               <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                 <div>
                   <div className="flex flex-wrap items-center gap-3">
@@ -199,29 +238,41 @@ function EditablePostForm({
   onCancel: () => void;
 }) {
   const [state, formAction, isPending] = useActionState(action, idleFormState());
+  const formRef = useRef<HTMLFormElement>(null);
+
+  useAutoFocusFirstError(state.fieldErrors, state.status, formRef);
+
+  useEffect(() => {
+    if (state.status === "success") {
+      onCancel();
+      requestAnimationFrame(() => {
+        document.getElementById(`notice-${post.id}`)?.focus();
+      });
+    }
+  }, [onCancel, post.id, state.status]);
 
   return (
-    <form action={formAction} className="space-y-3">
+    <form ref={formRef} action={formAction} className="space-y-3">
       <input type="hidden" name="id" value={post.id} />
-      {state.status === "error" && state.message ? (
-        <FormMessage tone="error">{state.message}</FormMessage>
-      ) : null}
-      {state.status === "success" && state.message ? (
-        <FormMessage tone="success">{state.message}</FormMessage>
-      ) : null}
+      <FormStatusBanner status="error" message={state.status === "error" ? state.message : undefined} />
+      <FormStatusBanner status="success" message={state.status === "success" ? state.message : undefined} />
       <textarea
         name="content"
         defaultValue={post.content}
         rows={4}
+        data-field-name="content"
+        aria-invalid={Boolean(state.fieldErrors?.content)}
+        aria-describedby={state.fieldErrors?.content ? `edit-${post.id}-content-error` : undefined}
         className="w-full resize-none border-2 border-leather-700 bg-parchment-100 p-4 font-serif text-ink-900 outline-none focus:border-gold-600"
       />
-      {state.fieldErrors?.content ? (
-        <p className="text-sm text-blood-700">{state.fieldErrors.content}</p>
-      ) : null}
+      <FieldError id={`edit-${post.id}-content-error`} message={state.fieldErrors?.content} />
       <div className="flex flex-wrap gap-3">
         <select
           name="tier_required"
           defaultValue={post.tierRequired}
+          data-field-name="tier_required"
+          aria-invalid={Boolean(state.fieldErrors?.tier_required)}
+          aria-describedby={state.fieldErrors?.tier_required ? `edit-${post.id}-tier-error` : undefined}
           className="border-2 border-leather-700 bg-parchment-100 px-3 py-2 font-serif text-xs uppercase tracking-widest text-ink-900 outline-none"
         >
           <option value="Public">Public Notice</option>
@@ -229,14 +280,14 @@ function EditablePostForm({
           <option value="Iron">Iron Tier+</option>
           <option value="Gold">Gold Tier Exclusive</option>
         </select>
-        <button
-          type="submit"
-          disabled={isPending}
+        <FieldError id={`edit-${post.id}-tier-error`} message={state.fieldErrors?.tier_required} />
+        <PendingButton
+          pending={isPending}
+          idleLabel="Save Notice"
+          pendingLabel="Saving..."
+          icon={<Save className="h-4 w-4" />}
           className="inline-flex items-center gap-2 border border-gold-600 bg-leather-800 px-5 py-2 font-serif tracking-wider text-parchment-200 transition hover:bg-leather-700 disabled:opacity-70"
-        >
-          <Save className="h-4 w-4" />
-          {isPending ? "Saving..." : "Save Notice"}
-        </button>
+        />
         <button
           type="button"
           onClick={onCancel}
@@ -266,17 +317,16 @@ function DeleteNoticeForm({
       <input type="hidden" name="id" value={id} />
       {state.status === "error" && state.message ? (
         <div className="mb-3">
-          <FormMessage tone="error">{state.message}</FormMessage>
+          <FormStatusBanner status="error" message={state.message} />
         </div>
       ) : null}
-      <button
-        type="submit"
-        disabled={isPending}
+      <PendingButton
+        pending={isPending}
+        idleLabel="Remove"
+        pendingLabel="Removing..."
+        icon={<Trash2 className="h-4 w-4" />}
         className="inline-flex items-center gap-2 border border-blood-600 bg-blood-600/10 px-4 py-2 font-serif text-sm tracking-wider text-blood-600 transition hover:bg-blood-600 hover:text-parchment-200 disabled:opacity-70"
-      >
-        <Trash2 className="h-4 w-4" />
-        {isPending ? "Removing..." : "Remove"}
-      </button>
+      />
     </form>
   );
 }

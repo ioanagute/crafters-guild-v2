@@ -1,0 +1,26 @@
+﻿ M package-lock.json
+ M package.json
+ M src/app/error/page.tsx
+ M src/app/globals.css
+ M src/app/login/actions.ts
+ M src/app/login/page.tsx
+ M src/components/FormMessage.tsx
+ M src/components/GuildDirectoryClient.tsx
+ M src/components/GuildMemberList.tsx
+ M src/components/MarketplaceCatalogClient.tsx
+ M src/components/MarketplaceProductFormClient.tsx
+ M src/components/NavigationClient.tsx
+ M src/components/ProductForm.tsx
+ M src/components/ProfileFormClient.tsx
+ M src/components/TavernBoardClient.tsx
+ M src/components/TavernChat.tsx
+ M src/components/ThemedLinkButton.tsx
+ M src/features/auth/actions/index.ts
+?? git_status.tmp
+?? src/components/LoginFormClient.tsx
+?? src/components/form/
+?? src/features/auth/actions/index.test.ts
+?? src/features/auth/types/
+?? src/lib/client/
+?? src/lib/filters.test.ts
+?? src/lib/filters.ts

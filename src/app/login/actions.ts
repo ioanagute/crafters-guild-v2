@@ -1,1 +1,1 @@
-export { loginAction as login, signupAction as signup } from "@/features/auth/actions";
+export { submitAuthAction as authAction } from "@/features/auth/actions";

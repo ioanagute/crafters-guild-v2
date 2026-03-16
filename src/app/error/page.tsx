@@ -2,6 +2,7 @@ import Link from "next/link";
 import { AlertTriangle, Shield, Undo2 } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import ParchmentCard from "@/components/ParchmentCard";
+import StatePanel from "@/components/StatePanel";
 import ThemedLinkButton from "@/components/ThemedLinkButton";
 
 export default async function ErrorPage({ searchParams }: { searchParams: Promise<{ message?: string; returnTo?: string }> }) {
@@ -17,10 +18,12 @@ export default async function ErrorPage({ searchParams }: { searchParams: Promis
         description="A branded fallback hall for broken paths, failed credentials, and any other trouble that interrupts a journey through the realm."
       />
       <ParchmentCard className="p-8 text-center sm:p-12">
-        <AlertTriangle className="mx-auto mb-4 h-12 w-12 text-blood-600" />
-        <p className="mx-auto max-w-2xl font-serif text-xl leading-relaxed text-ink-900">
-          {message}
-        </p>
+        <StatePanel
+          tone="error"
+          title="The guards refuse passage"
+          description={message}
+          icon={<AlertTriangle className="h-12 w-12 text-blood-600" />}
+        />
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <ThemedLinkButton href="/login" icon={<Shield className="h-4 w-4" />}>
             Return to the Register
