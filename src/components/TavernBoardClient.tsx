@@ -7,6 +7,7 @@ import FieldError from "@/components/form/FieldError";
 import FormStatusBanner from "@/components/form/FormStatusBanner";
 import PendingButton from "@/components/form/PendingButton";
 import StatePanel from "@/components/StatePanel";
+import ThemedButton from "@/components/ThemedButton";
 import { useAutoFocusFirstError } from "@/lib/client/useAutoFocusFirstError";
 import { buildSearchParams, sanitizeTavernFilter, type TavernFilter } from "@/lib/filters";
 import { idleFormState } from "@/lib/form-action-state";
@@ -115,7 +116,7 @@ export default function TavernBoardClient({
                 idleLabel="Post Notice"
                 pendingLabel="Posting..."
                 icon={<Send className="h-4 w-4" />}
-                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[1rem] border border-gold-600 bg-leather-800 px-6 py-2 font-serif tracking-[0.16em] text-parchment-200 transition hover:bg-leather-700 disabled:opacity-70"
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[0.95rem] border border-gold-600/80 bg-leather-800 px-6 py-2 font-serif tracking-[0.16em] uppercase text-gold-300 shadow-[0_14px_30px_rgba(0,0,0,0.2)] transition hover:border-gold-500 hover:bg-leather-700 hover:text-gold-200 disabled:opacity-70"
               />
             </div>
           </form>
@@ -136,7 +137,7 @@ export default function TavernBoardClient({
         {[
           ["all", "All Notices"],
           ["public", "Public Only"],
-            ["exclusive", "Members Only"],
+          ["exclusive", "Members Only"],
           ["mine", "My Notices"],
         ].map(([value, label]) => (
           <button
@@ -205,14 +206,14 @@ export default function TavernBoardClient({
                   </p>
                   {post.isOwner ? (
                     <div className="mt-5 flex flex-wrap gap-3">
-                      <button
-                        type="button"
+                      <ThemedButton
+                        size="md"
+                        variant="secondary"
                         onClick={() => setEditingId(post.id)}
-                        className="inline-flex min-h-11 items-center gap-2 rounded-full border border-gold-600 bg-parchment-100 px-4 py-2 font-serif text-sm tracking-[0.16em] text-leather-900"
+                        icon={<Edit3 className="h-4 w-4" />}
                       >
-                        <Edit3 className="h-4 w-4" />
                         Edit
-                      </button>
+                      </ThemedButton>
                       <DeleteNoticeForm id={post.id} action={deletePostAction} />
                     </div>
                   ) : null}
@@ -287,15 +288,15 @@ function EditablePostForm({
           idleLabel="Save Notice"
           pendingLabel="Saving..."
           icon={<Save className="h-4 w-4" />}
-          className="inline-flex min-h-11 items-center gap-2 rounded-full border border-gold-600 bg-leather-800 px-5 py-2 font-serif tracking-[0.16em] text-parchment-200 transition hover:bg-leather-700 disabled:opacity-70"
+          className="inline-flex min-h-11 items-center gap-2 rounded-[0.95rem] border border-gold-600/80 bg-leather-800 px-5 py-2 font-serif tracking-[0.16em] uppercase text-gold-300 shadow-[0_14px_30px_rgba(0,0,0,0.2)] transition hover:border-gold-500 hover:bg-leather-700 hover:text-gold-200 disabled:opacity-70"
         />
-        <button
-          type="button"
+        <ThemedButton
+          variant="secondary"
+          size="md"
           onClick={onCancel}
-          className="min-h-11 rounded-full border border-leather-800 bg-parchment-100 px-5 py-2 font-serif tracking-[0.16em] text-leather-900"
         >
           Cancel
-        </button>
+        </ThemedButton>
       </div>
     </form>
   );
@@ -326,7 +327,7 @@ function DeleteNoticeForm({
         idleLabel="Remove"
         pendingLabel="Removing..."
         icon={<Trash2 className="h-4 w-4" />}
-        className="inline-flex min-h-11 items-center gap-2 rounded-full border border-blood-600 bg-blood-600/10 px-4 py-2 font-serif text-sm tracking-[0.16em] text-blood-600 transition hover:bg-blood-600 hover:text-parchment-200 disabled:opacity-70"
+        className="inline-flex min-h-11 items-center gap-2 rounded-[0.95rem] border border-blood-600 bg-blood-600/10 px-4 py-2 font-serif text-sm tracking-[0.16em] uppercase text-blood-600 shadow-[0_14px_30px_rgba(0,0,0,0.2)] transition hover:bg-blood-600 hover:text-parchment-200 disabled:opacity-70"
       />
     </form>
   );

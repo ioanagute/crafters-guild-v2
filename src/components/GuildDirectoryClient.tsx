@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Search } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import GuildCard from "@/components/GuildCard";
+import StatePanel from "@/components/StatePanel";
 import type { Guild } from "@/features/guilds/types";
 import { buildSearchParams, sanitizeGuildQuery } from "@/lib/filters";
 
@@ -90,12 +91,12 @@ export default function GuildDirectoryClient({
       ) : null}
 
       {filteredGuilds.length === 0 ? (
-        <div className="section-panel px-6 py-12 text-center">
-          <p className="mb-2 font-serif text-2xl text-gold-400">No charter matches your search</p>
-          <p className="text-sm text-parchment-300">
-            Try another title or search by a craft named in the guild&apos;s lore.
-          </p>
-        </div>
+        <StatePanel
+          tone="empty"
+          title="No charter matches your search"
+          description="Try another title or search by a craft named in the guild's lore."
+          icon={<Search className="h-10 w-10 text-gold-500" />}
+        />
       ) : (
         <div className="grid grid-cols-1 gap-8 xl:grid-cols-2">
           {filteredGuilds.map((guild) => (

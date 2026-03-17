@@ -10,7 +10,7 @@ export default function StatPill({
   emphasis?: "default" | "soft";
 }) {
   return (
-    <div className={`relative min-w-[9rem] overflow-hidden rounded-[1.1rem] border px-5 py-4 shadow-[0_18px_30px_rgba(0,0,0,0.22)] transition-colors hover:border-gold-500/80 ${emphasis === "soft" ? "border-iron-700 bg-iron-800/72" : "border-gold-600/60 bg-iron-800/86"}`}>
+    <div className={`relative min-w-[9rem] overflow-hidden rounded-[1.1rem] border px-5 py-4 shadow-[0_18px_30px_rgba(0,0,0,0.22)] ${emphasis === "soft" ? "border-iron-700 bg-iron-800/72" : "border-gold-600/60 bg-iron-800/86"}`}>
       {/* Subtle metallic reflection */}
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
       

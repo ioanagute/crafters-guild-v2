@@ -166,7 +166,7 @@ export default function NavigationClient({ isAuthenticated }: { isAuthenticated:
                     className={`flex min-h-12 items-center gap-3 rounded-[1rem] border px-4 py-3 font-serif tracking-[0.18em] transition ${
                       active
                         ? "border-gold-600/70 bg-leather-800/90 text-gold-300"
-                        : "border-iron-700 bg-iron-800 text-parchment-100 hover:border-gold-600/40"
+                        : "border-iron-700 bg-iron-800 text-parchment-100 hover:border-gold-600/40 hover:bg-iron-700/60"
                     }`}
                   >
                     <Icon className="h-4 w-4" />

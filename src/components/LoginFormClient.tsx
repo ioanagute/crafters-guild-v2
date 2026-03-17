@@ -82,7 +82,7 @@ export default function LoginFormClient({
           idleLabel="Enter the Guild"
           pendingLabel="Entering..."
           icon={<Shield className="h-4 w-4" />}
-          className="flex min-h-12 w-full items-center justify-center gap-2 rounded-[1rem] border border-iron-900 bg-iron-900 py-3 font-serif tracking-[0.16em] text-parchment-200 shadow-lg disabled:opacity-70"
+          className="flex min-h-12 w-full items-center justify-center gap-2 rounded-[1rem] border border-gold-600 bg-leather-800 py-3 font-serif tracking-[0.16em] text-gold-300 shadow-lg transition hover:bg-leather-700 hover:text-gold-200 disabled:opacity-70"
           ariaLabel="Enter the Guild"
           disabled={isPending}
           onClick={() => setIntent("login")}

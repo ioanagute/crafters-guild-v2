@@ -25,7 +25,8 @@
     "crafters",
     "Fprofile",
     "vercel",
-    "Vercel"
+    "Vercel",
+    "turbopack"
   ],
   "ignorePaths": [
     "node_modules",

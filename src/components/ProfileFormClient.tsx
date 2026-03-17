@@ -108,14 +108,14 @@ export default function ProfileFormClient({
         <div className="flex flex-col gap-6 md:flex-row">
         <div className="flex flex-col gap-2 w-full md:w-1/2">
           <label className="font-serif text-ink-900 font-bold uppercase tracking-widest text-xs">Current Role within the Realm</label>
-          <div className="rounded-[0.95rem] border border-iron-800 bg-iron-900 px-4 py-3 font-serif uppercase tracking-widest text-gold-500 opacity-80 cursor-not-allowed">
+          <div className="rounded-[0.95rem] border border-leather-800/30 bg-parchment-100 px-4 py-3 font-serif uppercase tracking-widest text-leather-700 opacity-80 cursor-not-allowed">
             {profile.role || "Patron"}
           </div>
           <p className="text-xs text-leather-700 italic">Roles are declared upon registration.</p>
         </div>
 
         <FormField label="Guild Affiliation" htmlFor="guild_id" className="flex flex-col gap-2 w-full md:w-1/2">
-          <div className="rounded-sm border border-gold-600/60 bg-leather-800 px-4 py-3 text-sm text-parchment-200 shadow-[inset_0_0_20px_rgba(0,0,0,0.2)]">
+          <div className="rounded-[0.95rem] border border-gold-600/60 bg-leather-800 px-4 py-3 text-sm text-parchment-200 shadow-[inset_0_0_20px_rgba(0,0,0,0.2)]">
             <span className="block text-[11px] uppercase tracking-[0.25em] text-gold-400">Current Banner</span>
             <span className="mt-1 block font-serif text-lg">
               {profile.guildName || "Unaffiliated (Lone Wanderer)"}

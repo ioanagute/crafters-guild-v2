@@ -1,3 +1,4 @@
+import { useId } from "react";
 import type { ReactNode } from "react";
 
 export default function PageHeader({
@@ -15,18 +16,20 @@ export default function PageHeader({
   meta?: ReactNode;
   compact?: boolean;
 }) {
+  const gradientId = useId();
+
   return (
     <header className={`${compact ? "mb-6" : "mb-8"} section-panel relative overflow-hidden px-6 py-6 md:px-8 md:py-8`}>
       {/* Background Texture */}
       <div className="pointer-events-none absolute inset-0 opacity-[0.02] mix-blend-overlay bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')]" />
-      
+
       {/* Top Ornate Border */}
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold-500/50 to-transparent" />
       <div className="absolute left-1/2 top-0 -translate-x-1/2">
         <svg width="120" height="8" viewBox="0 0 120 8" fill="none" xmlns="http://www.w3.org/2000/svg" className="opacity-60">
-          <path d="M0 1C20 1 40 7 60 7C80 7 100 1 120 1" stroke="url(#gold-grad)" strokeWidth="1.5"/>
+          <path d="M0 1C20 1 40 7 60 7C80 7 100 1 120 1" stroke={`url(#${gradientId})`} strokeWidth="1.5"/>
           <defs>
-            <linearGradient id="gold-grad" x1="0" y1="0" x2="120" y2="0" gradientUnits="userSpaceOnUse">
+            <linearGradient id={gradientId} x1="0" y1="0" x2="120" y2="0" gradientUnits="userSpaceOnUse">
               <stop stopColor="transparent"/>
               <stop offset="0.5" stopColor="#d4af37"/>
               <stop offset="1" stopColor="transparent"/>

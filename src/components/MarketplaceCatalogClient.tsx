@@ -237,9 +237,12 @@ export default function MarketplaceCatalogClient({
                       Manage Listing
                     </Link>
                   ) : (
-                    <span className="text-xs uppercase tracking-[0.2em] text-leather-700">
+                    <Link
+                      href={`/marketplace/${product.id}`}
+                      className="inline-flex min-h-11 items-center rounded-full border border-iron-700 bg-iron-800 px-4 py-2 font-serif text-sm tracking-[0.16em] text-parchment-200 transition hover:border-gold-600 hover:bg-iron-700"
+                    >
                       Open Listing
-                    </span>
+                    </Link>
                   )}
                 </div>
               </ParchmentCard>
@@ -247,7 +250,7 @@ export default function MarketplaceCatalogClient({
           </div>
 
             <div className="section-panel mt-2 flex flex-col gap-4 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-leather-800">
+            <p className="text-sm text-parchment-300">
               Page {catalog.page} of {totalPages}
             </p>
             <div className="flex gap-3">

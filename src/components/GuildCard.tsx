@@ -43,7 +43,7 @@ export default function GuildCard({ guild }: { guild: Guild }) {
 
       <div className="flex items-center justify-between border-t border-leather-800/30 pt-4">
         <span className="text-[0.65rem] uppercase tracking-[0.25em] text-leather-700/80 font-bold">
-          Open Enrollment
+          Charter Available
         </span>
         <Link
           href={`/guilds/${guild.id}`}
