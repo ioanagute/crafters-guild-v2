@@ -28,7 +28,7 @@ export default function ThemedLinkButton({
   return (
     <Link
       href={href}
-      className={`inline-flex items-center gap-2 border-2 px-5 py-3 font-serif tracking-wider transition ${variants[variant]} ${className}`}
+      className={`focus-visible:ring-gold-500 focus-visible:ring-offset-iron-900 inline-flex items-center gap-2 border-2 px-5 py-3 font-serif tracking-wider transition outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${variants[variant]} ${className}`}
     >
       {icon}
       {children}

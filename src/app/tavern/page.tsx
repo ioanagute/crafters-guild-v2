@@ -1,12 +1,18 @@
-import TavernChat from '@/components/TavernChat';
-import PageHeader from '@/components/PageHeader';
-import TavernBoardClient from '@/components/TavernBoardClient';
+import TavernChat from "@/components/TavernChat";
+import PageHeader from "@/components/PageHeader";
+import TavernBoardClient from "@/components/TavernBoardClient";
 import {
   createPostAction,
   deletePostAction,
   updatePostAction,
-} from '@/features/tavern/actions';
-import { getTavernPageData } from '@/features/tavern/server/tavern';
+} from "@/features/tavern/actions";
+import { getTavernPageData } from "@/features/tavern/server/tavern";
+
+export const metadata = {
+  title: "The Tavern",
+  description:
+    "Share dispatches, news, and fleeting words with other crafters at the Local Hearth.",
+};
 
 export default async function Tavern() {
   const { posts, isAuthenticated, chatUser } = await getTavernPageData();

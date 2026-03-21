@@ -1,9 +1,17 @@
-'use client';
+"use client";
 
 import Link from "next/link";
-import { Menu, Shield, Swords, Scroll, Users, UserCircle, X } from "lucide-react";
+import {
+  Menu,
+  Shield,
+  Swords,
+  Scroll,
+  Users,
+  UserCircle,
+  X,
+} from "lucide-react";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const navItems = [
   { href: "/marketplace", label: "Marketplace", icon: Scroll },
@@ -15,21 +23,33 @@ function isActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export default function NavigationClient({ isAuthenticated }: { isAuthenticated: boolean }) {
+export default function NavigationClient({
+  isAuthenticated,
+}: {
+  isAuthenticated: boolean;
+}) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    if (open) window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
+  }, [open]);
+
   return (
-    <nav className="sticky top-0 z-50 border-b-4 border-iron-800 bg-iron-900/95 shadow-2xl backdrop-blur">
+    <nav className="border-iron-800 bg-iron-900/95 sticky top-0 z-50 border-b-4 shadow-2xl backdrop-blur">
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 font-serif">
-        <Link href="/" className="flex items-center gap-3 group">
-          <Shield className="h-8 w-8 text-gold-500 group-hover:animate-flicker" />
-          <span className="text-xl font-bold tracking-wider text-gold-accent sm:text-2xl">
+        <Link href="/" className="group flex items-center gap-3">
+          <Shield className="text-gold-500 group-hover:animate-flicker h-8 w-8" />
+          <span className="text-gold-accent text-xl font-bold tracking-wider sm:text-2xl">
             The Artisans&apos; Guild
           </span>
         </Link>
 
-        <div className="hidden items-center gap-8 text-sm uppercase tracking-widest text-parchment-200 md:flex">
+        <div className="text-parchment-200 hidden items-center gap-8 text-sm tracking-widest uppercase md:flex">
           {navItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(pathname, item.href);
@@ -38,7 +58,7 @@ export default function NavigationClient({ isAuthenticated }: { isAuthenticated:
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-2 transition-colors ${active ? "text-gold-400" : "hover:text-gold-400"}`}
+                className={`focus-visible:text-gold-400 focus-visible:ring-gold-500/50 flex items-center gap-2 transition-colors outline-none focus-visible:ring-1 ${active ? "text-gold-400" : "hover:text-gold-400"}`}
               >
                 <Icon className="h-4 w-4" />
                 <span>{item.label}</span>
@@ -51,7 +71,7 @@ export default function NavigationClient({ isAuthenticated }: { isAuthenticated:
           {isAuthenticated ? (
             <Link
               href="/profile"
-              className={`inline-flex items-center gap-2 border-2 px-6 py-2 transition-colors ${
+              className={`focus-visible:ring-gold-500 inline-flex items-center gap-2 border-2 px-6 py-2 transition-colors outline-none focus-visible:ring-2 ${
                 isActive(pathname, "/profile")
                   ? "border-gold-500 bg-leather-700 text-gold-300"
                   : "border-gold-600 bg-leather-800 text-parchment-200 hover:bg-leather-700"
@@ -63,7 +83,7 @@ export default function NavigationClient({ isAuthenticated }: { isAuthenticated:
           ) : (
             <Link
               href="/login"
-              className={`border-2 px-6 py-2 transition-colors ${
+              className={`focus-visible:ring-gold-500 border-2 px-6 py-2 transition-colors outline-none focus-visible:ring-2 ${
                 isActive(pathname, "/login")
                   ? "border-gold-500 bg-leather-700 text-gold-300"
                   : "border-gold-600 bg-leather-800 text-parchment-200 hover:bg-leather-700"
@@ -76,7 +96,7 @@ export default function NavigationClient({ isAuthenticated }: { isAuthenticated:
 
         <button
           type="button"
-          className="inline-flex h-12 w-12 items-center justify-center border border-iron-700 bg-iron-800 text-parchment-200 md:hidden"
+          className="border-iron-700 bg-iron-800 text-parchment-200 focus-visible:ring-gold-500 inline-flex h-12 w-12 items-center justify-center border outline-none focus-visible:ring-2 md:hidden"
           onClick={() => setOpen((value) => !value)}
           aria-expanded={open}
           aria-label="Toggle navigation"
@@ -86,7 +106,7 @@ export default function NavigationClient({ isAuthenticated }: { isAuthenticated:
       </div>
 
       {open ? (
-        <div className="border-t border-iron-700 bg-iron-900 px-4 py-4 md:hidden">
+        <div className="border-iron-700 bg-iron-900 border-t px-4 py-4 md:hidden">
           <div className="flex flex-col gap-2">
             {navItems.map((item) => {
               const Icon = item.icon;
@@ -97,7 +117,7 @@ export default function NavigationClient({ isAuthenticated }: { isAuthenticated:
                   key={item.href}
                   href={item.href}
                   onClick={() => setOpen(false)}
-                  className={`flex items-center gap-3 border px-4 py-3 font-serif tracking-wider transition ${
+                  className={`focus-visible:ring-gold-500 flex items-center gap-3 border px-4 py-3 font-serif tracking-wider transition outline-none focus-visible:ring-2 ${
                     active
                       ? "border-gold-600 bg-leather-800/80 text-gold-400"
                       : "border-iron-700 bg-iron-800 text-parchment-200"
@@ -111,7 +131,7 @@ export default function NavigationClient({ isAuthenticated }: { isAuthenticated:
             <Link
               href={isAuthenticated ? "/profile" : "/login"}
               onClick={() => setOpen(false)}
-              className="mt-2 flex items-center justify-center gap-2 border-2 border-gold-600 bg-leather-800 px-4 py-3 font-serif tracking-wider text-gold-400"
+              className="border-gold-600 bg-leather-800 text-gold-400 focus-visible:ring-gold-500 mt-2 flex items-center justify-center gap-2 border-2 px-4 py-3 font-serif tracking-wider outline-none focus-visible:ring-2"
             >
               <UserCircle className="h-4 w-4" />
               {isAuthenticated ? "My Heraldry" : "Enter"}
